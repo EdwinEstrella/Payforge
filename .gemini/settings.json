@@ -10,6 +10,12 @@
         "API_KEY": "ik_6x5cr7yb8h9m7c6v8t7yb9numi0oaisudhouaoc6tv7yb9nu",
         "API_BASE_URL": "https://payforge.azokia.com"
       }
+    },
+    "stripe": {
+      "url": "https://mcp.stripe.com",
+      "headers": {
+        "Authorization": "Bearer YOUR_STRIPE_SECRET_KEY"
+      }
     }
   }
 }
