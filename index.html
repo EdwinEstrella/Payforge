@@ -480,10 +480,15 @@
                     </div>
                 </div>
 
-                <!-- Checkbox -->
-                <div class="checkbox-group">
+                <!-- Checkboxes -->
+                <div class="checkbox-group" style="margin-bottom: 8px;">
                     <input type="checkbox" id="remember" name="remember" />
                     <label class="checkbox-label" for="remember">Mantener sesión iniciada por 30 días</label>
+                </div>
+
+                <div class="checkbox-group" style="margin-bottom: 24px;">
+                    <input type="checkbox" id="rememberUser" name="rememberUser" />
+                    <label class="checkbox-label" for="rememberUser">Recordar usuario</label>
                 </div>
 
                 <!-- Submit Button -->
@@ -558,15 +563,43 @@
         })
 
         // Handle login form submission
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault()
             const email = document.getElementById('email').value
             const password = document.getElementById('password').value
-            const remember = document.getElementById('remember').checked
             
-            console.log('Login attempt:', { email, remember })
-            alert(`Iniciando sesión con: ${email}`)
-            // Add your login logic here
+            const submitBtn = e.target.querySelector('.submit-btn')
+            const originalBtnContent = submitBtn.innerHTML
+            
+            try {
+                // Indicador de carga
+                submitBtn.disabled = true
+                submitBtn.innerHTML = 'Iniciando sesión...'
+                
+                console.log('Login attempt with Insforge:', { email })
+                const { data, error } = await window.electronAPI.login(email, password)
+
+                if (error) {
+                    console.error('Login error:', error)
+                    alert('Error al iniciar sesión: ' + (error.message || 'Credenciales inválidas'))
+                    submitBtn.disabled = false
+                    submitBtn.innerHTML = originalBtnContent
+                    return
+                }
+
+                if (data && data.accessToken) {
+                    console.log('Login successful!', data.user.email)
+                    // Redirigir al dashboard
+                    window.location.href = 'dashboard.html'
+                } else {
+                    throw new Error('No se recibió el token de acceso')
+                }
+            } catch (err) {
+                console.error('Unexpected error:', err)
+                alert('Ocurrió un error inesperado. Por favor, intentá de nuevo.')
+                submitBtn.disabled = false
+                submitBtn.innerHTML = originalBtnContent
+            }
         })
 
         // Handle Google Sign In

@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html class="light" lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Payforge - Panel de Control</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#dcd9db",
+                        "outline": "#76777d",
+                        "inverse-on-surface": "#f3f0f2",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "surface-variant": "#e4e2e4",
+                        "on-secondary-container": "#54647a",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#191c1e",
+                        "surface-tint": "#565e74",
+                        "surface-container": "#f0edef",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed": "#131b2e",
+                        "secondary-container": "#d0e1fb",
+                        "primary": "#000000",
+                        "on-tertiary-fixed": "#191c1e",
+                        "secondary-fixed-dim": "#b7c8e1",
+                        "primary-container": "#131b2e",
+                        "on-secondary-fixed-variant": "#38485d",
+                        "error-container": "#ffdad6",
+                        "surface-container-low": "#f6f3f5",
+                        "secondary": "#505f76",
+                        "background": "#fcf8fa",
+                        "tertiary": "#000000",
+                        "on-secondary-fixed": "#0b1c30",
+                        "on-tertiary-container": "#818486",
+                        "on-surface-variant": "#45464d",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "tertiary-fixed": "#e0e3e5",
+                        "surface-container-high": "#eae7e9",
+                        "on-background": "#1b1b1d",
+                        "surface-bright": "#fcf8fa",
+                        "inverse-surface": "#303032",
+                        "inverse-primary": "#bec6e0",
+                        "on-error-container": "#93000a",
+                        "on-tertiary": "#ffffff",
+                        "surface": "#fcf8fa",
+                        "primary-fixed-dim": "#bec6e0",
+                        "surface-container-highest": "#e4e2e4",
+                        "on-surface": "#1b1b1d",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "outline-variant": "#c6c6cd",
+                        "primary-fixed": "#dae2fd",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#d3e4fe",
+                        "on-primary": "#ffffff",
+                        "on-primary-container": "#7c839b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "sidebar-width": "260px",
+                        "xs": "4px",
+                        "xl": "40px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "base": "4px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Manrope", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "headline-md": ["Manrope", "sans-serif"],
+                        "display-lg": ["Manrope", "sans-serif"],
+                        "label-caps": ["Inter", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"],
+                        "data-mono": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #fcf8fa;
+        }
+        /* Custom Titlebar for Electron */
+        .titlebar {
+            -webkit-app-region: drag;
+            height: 32px;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            user-select: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+        }
+        .titlebar-title {
+            font-size: 12px;
+            font-weight: 500;
+            color: #333;
+            flex-grow: 1;
+        }
+        .titlebar-controls {
+            -webkit-app-region: no-drag;
+            display: flex;
+            gap: 0;
+            margin-left: auto;
+        }
+        .titlebar-btn {
+            width: 46px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            transition: background-color 0.15s ease;
+        }
+        .titlebar-btn:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        .titlebar-btn.close:hover {
+            background-color: #e81123;
+            color: white;
+        }
+        .titlebar-btn svg {
+            width: 12px;
+            height: 12px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.5;
+        }
+        /* Adjust layout for titlebar */
+        aside, header {
+            top: 32px !important;
+            height: calc(100% - 32px) !important;
+        }
+        header {
+            height: 64px !important;
+        }
+        main {
+            padding-top: calc(64px + 32px + 24px) !important;
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface antialiased">
+    <!-- Custom Titlebar -->
+    <div class="titlebar">
+        <div class="titlebar-title">Payforge - Panel de Control</div>
+        <div class="titlebar-controls">
+            <button class="titlebar-btn" id="min-btn" title="Minimizar">
+                <svg viewBox="0 0 12 12"><rect x="1" y="5" width="10" height="1"/></svg>
+            </button>
+            <button class="titlebar-btn" id="max-btn" title="Maximizar">
+                <svg id="max-icon" viewBox="0 0 12 12"><rect x="1" y="1" width="10" height="10"/></svg>
+                <svg id="restore-icon" viewBox="0 0 12 12" style="display: none;">
+                    <rect x="1" y="3" width="8" height="8"/>
+                    <polyline points="3 3 3 1 11 1 11 9" fill="none"/>
+                </svg>
+            </button>
+            <button class="titlebar-btn close" id="close-btn" title="Cerrar">
+                <svg viewBox="0 0 12 12"><path d="M1 1L11 11M11 1L1 11"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- SideNavBar -->
+    <aside class="fixed left-0 w-64 border-r border-slate-800 bg-slate-950 dark:bg-black font-manrope antialiased tracking-tight flex flex-col p-4 z-50">
+        <div class="mb-8 px-4 flex items-center gap-3">
+            <div class="w-10 h-10 flex items-center justify-center">
+                <img src="logo_blanco_negro.png" alt="Logo" class="w-full h-full object-contain filter invert" />
+            </div>
+            <div>
+                <h1 class="text-white text-xl font-bold tracking-tight">Payforge</h1>
+                <p class="text-slate-500 text-xs">Operaciones Financieras</p>
+            </div>
+        </div>
+        <nav class="flex-1 space-y-1">
+            <a class="flex items-center gap-3 px-4 py-3 bg-slate-800/50 text-white rounded-lg font-semibold active:scale-[0.98] transition-transform duration-150" href="#">
+                <span class="material-symbols-outlined">dashboard</span>
+                Panel Principal
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors active:scale-[0.98] transition-transform duration-150" href="#">
+                <span class="material-symbols-outlined">group</span>
+                Clientes
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors active:scale-[0.98] transition-transform duration-150" href="#">
+                <span class="material-symbols-outlined">history</span>
+                Historial
+            </a>
+        </nav>
+        <div class="mt-auto space-y-1 border-t border-slate-800 pt-4">
+            <a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors" href="#">
+                <span class="material-symbols-outlined">settings</span>
+                Configuración
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors" href="#">
+                <span class="material-symbols-outlined">help</span>
+                Soporte
+            </a>
+            <div class="mt-4 px-4">
+                <button class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-colors active:scale-95">
+                    Crear Pago
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- TopAppBar -->
+    <header class="fixed right-0 w-[calc(100%-16rem)] border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-8 z-40 font-manrope text-sm font-medium">
+        <div class="flex items-center gap-4 flex-1">
+            <div class="relative w-full max-w-md">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+                <input class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-none rounded-full text-sm focus:ring-2 focus:ring-blue-500/20 transition-all" placeholder="Buscar transacciones, clientes..." type="text"/>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button class="hover:bg-slate-50 dark:hover:bg-slate-800 rounded-full p-2 transition-all">
+                <span class="material-symbols-outlined text-slate-600 dark:text-slate-400">notifications</span>
+            </button>
+            <button class="hover:bg-slate-50 dark:hover:bg-slate-800 rounded-full p-2 transition-all">
+                <span class="material-symbols-outlined text-slate-600 dark:text-slate-400">apps</span>
+            </button>
+            <div class="h-6 w-px bg-slate-200 dark:border-slate-800 mx-2"></div>
+            <button class="text-slate-500 dark:text-slate-400 font-medium px-2 hover:text-slate-900">Ayuda</button>
+            <div class="ml-4 flex items-center gap-3">
+                <img alt="Perfil" class="w-8 h-8 rounded-full border border-slate-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4Dimv4Os3AU-NCA2fjoPiD3mJYY8-JlPsmtprMpdJFSnT2X2Foml7Q6i2H-6fLEAmbMzMTrtJo3_a8KnBSyr1UnTJJcCoLGwS8n1JmxzRb6qYS7Q5xgWHqRpRxMEaDYVWGThUt_i_LwggavllFpymHG6AyEYrPF624P1l6i5MlWkhYT6WIu-M_5yGCKpuLgYlMzE06YV6XXk9cS31n0WT6tXfHNhbHRwXRU0v6o-ZGixhiLy1JLjNpp04Ugpn2MmBMKFw_qFmSSqL"/>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="ml-64 px-8 pb-12 min-h-screen max-w-[1440px] mx-auto">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h2 class="font-headline-md text-headline-md text-slate-900">Resumen del Panel</h2>
+                <p class="font-body-md text-body-md text-slate-500 mt-1">Bienvenido de nuevo. Esto es lo que está pasando con tus pagos hoy.</p>
+            </div>
+            <button class="flex items-center gap-2 px-6 py-3 bg-[#2563EB] text-white rounded-xl font-semibold shadow-sm hover:bg-blue-700 transition-all active:scale-[0.98]">
+                <span class="material-symbols-outlined">link</span>
+                Generar Link de Pago
+            </button>
+        </div>
+
+        <!-- Bento Grid Layout -->
+        <div class="grid grid-cols-12 gap-6">
+            <!-- Summary Stats -->
+            <div class="col-span-12 lg:col-span-4 bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-sm relative overflow-hidden">
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#0F172A]"></div>
+                <div class="flex justify-between items-start mb-4">
+                    <p class="font-label-caps text-label-caps text-slate-500 uppercase tracking-wider">Ingresos Totales</p>
+                    <span class="material-symbols-outlined text-blue-600 bg-blue-50 p-2 rounded-lg">payments</span>
+                </div>
+                <h3 class="font-display-lg text-display-lg text-slate-900">$128,430.20</h3>
+                <div class="mt-4 flex items-center gap-2 text-green-600 font-medium text-sm">
+                    <span class="material-symbols-outlined text-sm">trending_up</span>
+                    <span>+12.5% desde el mes pasado</span>
+                </div>
+            </div>
+
+            <div class="col-span-12 lg:col-span-4 bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-sm relative overflow-hidden">
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#2563EB]"></div>
+                <div class="flex justify-between items-start mb-4">
+                    <p class="font-label-caps text-label-caps text-slate-500 uppercase tracking-wider">Pagos Pendientes</p>
+                    <span class="material-symbols-outlined text-amber-600 bg-amber-50 p-2 rounded-lg">schedule</span>
+                </div>
+                <h3 class="font-display-lg text-display-lg text-slate-900">$12,050.00</h3>
+                <div class="mt-4 flex items-center gap-2 text-slate-500 font-medium text-sm">
+                    <span>14 transacciones esperando verificación</span>
+                </div>
+            </div>
+
+            <div class="col-span-12 lg:col-span-4 bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-sm relative overflow-hidden">
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#64748B]"></div>
+                <div class="flex justify-between items-start mb-4">
+                    <p class="font-label-caps text-label-caps text-slate-500 uppercase tracking-wider">Links Exitosos</p>
+                    <span class="material-symbols-outlined text-emerald-600 bg-emerald-50 p-2 rounded-lg">check_circle</span>
+                </div>
+                <h3 class="font-display-lg text-display-lg text-slate-900">842</h3>
+                <div class="mt-4 flex items-center gap-2 text-slate-500 font-medium text-sm">
+                    <span>Tasa de conversión: 68.4%</span>
+                </div>
+            </div>
+
+            <!-- Revenue Chart Area -->
+            <div class="col-span-12 lg:col-span-8 bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-sm">
+                <div class="flex items-center justify-between mb-8">
+                    <h4 class="font-headline-sm text-headline-sm text-slate-900">Rendimiento de Ingresos</h4>
+                    <div class="flex gap-2">
+                        <button class="px-3 py-1 text-xs font-semibold rounded-md bg-slate-100 text-slate-900">7D</button>
+                        <button class="px-3 py-1 text-xs font-semibold rounded-md text-slate-500 hover:bg-slate-50">30D</button>
+                        <button class="px-3 py-1 text-xs font-semibold rounded-md text-slate-500 hover:bg-slate-50">12M</button>
+                    </div>
+                </div>
+                <div class="h-64 w-full bg-slate-50 rounded-lg flex items-end justify-between px-6 pb-4">
+                    <div class="w-8 bg-blue-200 rounded-t-sm h-[30%]"></div>
+                    <div class="w-8 bg-blue-300 rounded-t-sm h-[45%]"></div>
+                    <div class="w-8 bg-blue-400 rounded-t-sm h-[35%]"></div>
+                    <div class="w-8 bg-blue-600 rounded-t-sm h-[60%]"></div>
+                    <div class="w-8 bg-blue-400 rounded-t-sm h-[50%]"></div>
+                    <div class="w-8 bg-blue-300 rounded-t-sm h-[75%]"></div>
+                    <div class="w-8 bg-blue-600 rounded-t-sm h-[90%]"></div>
+                    <div class="w-8 bg-blue-500 rounded-t-sm h-[65%]"></div>
+                    <div class="w-8 bg-blue-300 rounded-t-sm h-[40%]"></div>
+                    <div class="w-8 bg-blue-600 rounded-t-sm h-[85%]"></div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="col-span-12 lg:col-span-4 bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-sm">
+                <h4 class="font-headline-sm text-headline-sm text-slate-900 mb-6">Actividad Reciente</h4>
+                <div class="space-y-6">
+                    <div class="flex gap-4">
+                        <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-emerald-600 text-xl">add</span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-slate-900">Pago recibido de Acme Corp</p>
+                            <p class="text-xs text-slate-500">Hace 2 minutos • Factura #INV-2041</p>
+                        </div>
+                        <div class="text-sm font-bold text-slate-900">+$2,400</div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-blue-600 text-xl">link</span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-slate-900">Nuevo link de pago generado</p>
+                            <p class="text-xs text-slate-500">Hace 45 minutos • Diseño UI App Web</p>
+                        </div>
+                        <div class="text-xs font-semibold px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full h-fit">Activo</div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-slate-600 text-xl">person</span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-slate-900">Nuevo cliente agregado</p>
+                            <p class="text-xs text-slate-500">Hace 3 horas • Sarah Jenkins</p>
+                        </div>
+                    </div>
+                </div>
+                <button class="w-full mt-8 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                    Ver toda la actividad
+                </button>
+            </div>
+
+            <!-- Transaction Table Section -->
+            <div class="col-span-12 bg-white border border-[#E2E8F0] rounded-xl shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                    <h4 class="font-headline-sm text-headline-sm text-slate-900">Últimas Transacciones</h4>
+                    <button class="text-sm font-semibold text-slate-600 flex items-center gap-1 hover:text-slate-900">
+                        Filtrar
+                        <span class="material-symbols-outlined text-sm">filter_list</span>
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-slate-50/50">
+                                <th class="px-6 py-3 font-label-caps text-label-caps text-slate-500 uppercase">Cliente</th>
+                                <th class="px-6 py-3 font-label-caps text-label-caps text-slate-500 uppercase">Estado</th>
+                                <th class="px-6 py-3 font-label-caps text-label-caps text-slate-500 uppercase">Fecha</th>
+                                <th class="px-6 py-3 font-label-caps text-label-caps text-slate-500 uppercase">Método</th>
+                                <th class="px-6 py-3 font-label-caps text-label-caps text-slate-500 uppercase text-right">Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-xs text-slate-600">JD</div>
+                                        <div>
+                                            <p class="text-sm font-semibold text-slate-900">John Doe</p>
+                                            <p class="text-xs text-slate-500">john@example.com</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">Pagado</span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-slate-600">24 Oct, 2023</td>
+                                <td class="px-6 py-4 text-sm text-slate-600">Visa •••• 4242</td>
+                                <td class="px-6 py-4 text-sm font-bold text-slate-900 text-right">$599.00</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-xs text-slate-600">AS</div>
+                                        <div>
+                                            <p class="text-sm font-semibold text-slate-900">Alice Smith</p>
+                                            <p class="text-xs text-slate-500">alice@smith.co</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">Pendiente</span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-slate-600">23 Oct, 2023</td>
+                                <td class="px-6 py-4 text-sm text-slate-600">Transferencia Bancaria</td>
+                                <td class="px-6 py-4 text-sm font-bold text-slate-900 text-right">$1,250.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Titlebar controls
+        document.getElementById('min-btn').addEventListener('click', () => {
+            window.electronAPI.minimize()
+        })
+
+        document.getElementById('max-btn').addEventListener('click', () => {
+            window.electronAPI.maximize()
+        })
+
+        document.getElementById('close-btn').addEventListener('click', () => {
+            window.electronAPI.close()
+        })
+
+        // Update maximize/restore icon
+        const updateMaximizeIcon = (isMaximized) => {
+            const maxIcon = document.getElementById('max-icon')
+            const restoreIcon = document.getElementById('restore-icon')
+            const maxBtn = document.getElementById('max-btn')
+
+            if (isMaximized) {
+                maxIcon.style.display = 'none'
+                restoreIcon.style.display = 'block'
+                maxBtn.title = 'Restaurar'
+            } else {
+                maxIcon.style.display = 'block'
+                restoreIcon.style.display = 'none'
+                maxBtn.title = 'Maximizar'
+            }
+        }
+
+        window.electronAPI.onWindowMaximized(updateMaximizeIcon)
+    </script>
+</body>
+</html>
