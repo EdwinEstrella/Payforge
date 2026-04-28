@@ -4,17 +4,22 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 module.exports = {
   packagerConfig: {
     asar: true,
+    icon: './logo_blanco_negro' // Forge busca .ico en Windows automáticamente
   },
   rebuildConfig: {},
   makers: [
     {
       name: '@electron-forge/maker-wix',
       config: {
-        name: 'MiApp',
-        manufacturer: 'Edwin',
+        name: 'Payforge',
+        manufacturer: 'Azokia',
         language: 3082, // Español
+        icon: './logo_blanco_negro.ico', // Ícono del archivo .msi
         ui: {
-          chooseDirectory: true // Activa el wizard con selección de directorio
+          chooseDirectory: true,
+          images: {
+            banner: './logo_blanco_negro.png', // Imagen lateral
+          }
         }
       },
     },

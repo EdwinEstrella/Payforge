@@ -21,7 +21,7 @@ function createWindow () {
     minHeight: 600,
     frame: false,
     show: false,
-    icon: path.join(__dirname, 'logo_blanco_negro.png'),
+    icon: path.join(__dirname, 'logo_blanco_negro.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
     }
