@@ -1,0 +1,92 @@
+<div class="flex items-end justify-between mb-8">
+    <div>
+        <h1 class="font-headline-md text-headline-md text-slate-900 mb-1">Gestión de Clientes</h1>
+        <p class="font-body-md text-body-md text-slate-500">Administra y supervisa todas tus relaciones comerciales e historiales de pago.</p>
+    </div>
+    <div class="flex gap-3">
+        <button class="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-lg transition-all border border-slate-200">
+            <span class="material-symbols-outlined text-[18px]">download</span>
+            Exportar Lista
+        </button>
+        <button class="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-lg transition-all shadow-lg shadow-blue-500/20">
+            <span class="material-symbols-outlined text-[18px]">add</span>
+            Agregar Cliente
+        </button>
+    </div>
+</div>
+
+<div class="grid grid-cols-12 gap-6 mb-10">
+    <div class="col-span-12 md:col-span-4 bg-white border border-slate-200 rounded-xl p-6 relative overflow-hidden shadow-sm">
+        <div class="absolute left-0 top-0 h-full w-[2px] bg-blue-600"></div>
+        <p class="font-label-caps text-label-caps text-slate-500 uppercase mb-2">Clientes Activos</p>
+        <div class="flex items-baseline gap-2">
+            <span class="font-display-lg text-display-lg text-slate-900">1,284</span>
+            <span class="text-green-600 text-sm font-bold flex items-center">
+                <span class="material-symbols-outlined text-[16px]">arrow_upward</span>
+                12%
+            </span>
+        </div>
+    </div>
+    <div class="col-span-12 md:col-span-4 bg-white border border-slate-200 rounded-xl p-6 relative overflow-hidden shadow-sm">
+        <div class="absolute left-0 top-0 h-full w-[2px] bg-green-500"></div>
+        <p class="font-label-caps text-label-caps text-slate-500 uppercase mb-2">LTV Promedio</p>
+        <div class="flex items-baseline gap-2">
+            <span class="font-display-lg text-display-lg text-slate-900">$2,450</span>
+            <span class="text-slate-400 text-sm font-medium">por mes</span>
+        </div>
+    </div>
+    <div class="col-span-12 md:col-span-4 bg-white border border-slate-200 rounded-xl p-6 relative overflow-hidden shadow-sm">
+        <div class="absolute left-0 top-0 h-full w-[2px] bg-slate-900"></div>
+        <p class="font-label-caps text-label-caps text-slate-500 uppercase mb-2">Crecimiento</p>
+        <div class="flex items-baseline gap-2">
+            <span class="font-display-lg text-display-lg text-slate-900">24.8%</span>
+            <span class="text-green-600 text-sm font-bold flex items-center">
+                <span class="material-symbols-outlined text-[16px]">trending_up</span>
+                Estable
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+    <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 cursor-pointer hover:bg-slate-50 transition-colors">
+                <span class="material-symbols-outlined text-[18px]">filter_list</span>
+                Filtros
+            </div>
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 cursor-pointer hover:bg-slate-50 transition-colors">
+                <span class="material-symbols-outlined text-[18px]">sort</span>
+                Ordenar
+            </div>
+        </div>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-white border-b border-slate-100">
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs">Nombre del Cliente</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs text-right">Total Gastado</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs">Estado</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                <tr class="hover:bg-slate-50/80 transition-colors group">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">AM</div>
+                            <div>
+                                <p class="font-headline-sm text-sm text-slate-900 mb-0.5">Alex Morgan</p>
+                                <p class="text-xs text-slate-400">Acme Corp</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-slate-900 text-right font-medium">$12,450.00</td>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">Activo</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

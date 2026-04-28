@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Payforge - Panel de Control</title>
+    <title>Payforge - Gestión de Clientes</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -176,7 +176,7 @@
 <body class="font-body-md text-on-surface antialiased">
     <!-- Custom Titlebar -->
     <div class="titlebar">
-        <div class="titlebar-title">Payforge - Panel de Control</div>
+        <div class="titlebar-title">Payforge - Gestión de Clientes</div>
         <div class="titlebar-controls">
             <button class="titlebar-btn" id="min-btn" title="Minimizar">
                 <svg viewBox="0 0 12 12"><rect x="1" y="5" width="10" height="1"/></svg>
@@ -205,11 +205,11 @@
             </div>
         </div>
         <nav class="flex-1 space-y-1">
-            <a class="flex items-center gap-3 px-4 py-3 bg-slate-800/50 text-white rounded-lg font-semibold active:scale-[0.98] transition-transform duration-150" href="dashboard.html">
+            <a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors active:scale-[0.98] transition-transform duration-150" href="dashboard.html">
                 <span class="material-symbols-outlined">dashboard</span>
                 Panel Principal
             </a>
-            <a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors active:scale-[0.98] transition-transform duration-150" href="clients.html">
+            <a class="flex items-center gap-3 px-4 py-3 bg-slate-800/50 text-white rounded-lg font-semibold active:scale-[0.98] transition-transform duration-150" href="clients.html">
                 <span class="material-symbols-outlined">group</span>
                 Clientes
             </a>
@@ -241,7 +241,7 @@
         <div class="flex items-center gap-4 flex-1">
             <div class="relative w-full max-w-md">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-                <input class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-none rounded-full text-sm focus:ring-2 focus:ring-blue-500/20 transition-all" placeholder="Buscar transacciones, clientes..." type="text"/>
+                <input class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-none rounded-full text-sm focus:ring-2 focus:ring-blue-500/20 transition-all" placeholder="Buscar clientes..." type="text"/>
             </div>
         </div>
         <div class="flex items-center gap-2">
@@ -254,184 +254,179 @@
             <div class="h-6 w-px bg-slate-200 dark:border-slate-800 mx-2"></div>
             <button class="text-slate-500 dark:text-slate-400 font-medium px-2 hover:text-slate-900">Ayuda</button>
             <div class="ml-4 flex items-center gap-3">
-                <img alt="Perfil" class="w-8 h-8 rounded-full border border-slate-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4Dimv4Os3AU-NCA2fjoPiD3mJYY8-JlPsmtprMpdJFSnT2X2Foml7Q6i2H-6fLEAmbMzMTrtJo3_a8KnBSyr1UnTJJcCoLGwS8n1JmxzRb6qYS7Q5xgWHqRpRxMEaDYVWGThUt_i_LwggavllFpymHG6AyEYrPF624P1l6i5MlWkhYT6WIu-M_5yGCKpuLgYlMzE06YV6XXk9cS31n0WT6tXfHNhbHRwXRU0v6o-ZGixhiLy1JLjNpp04Ugpn2MmBMKFw_qFmSSqL"/>
+                <img alt="Perfil" class="w-8 h-8 rounded-full border border-slate-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAoMxEXQjl6syd-YgitAXsmF4aMqm-umsXb5ew_cdwlF1kxOeG8LbP8QRBn5hC7xCv3QNcIFVCo8qGzthqBi1hF5AQEHd7MTmS6UaG4uvs0LKHbgb5s8W4_XTO-GtNvOmtUIHtQREFXmZwb0_MVCcCNdJbKLHyNt9vi_mVz92HLxBwNkwgBK-0Bbul9oBPakp2op3_uCSls0KjNNZqMCNgaf3SKZoBWe1LnAG_npm7BRSrCJlC92_Hy5UB9GRVbPRfMYJSPIw5XcneU"/>
             </div>
         </div>
     </header>
 
     <!-- Main Content Area -->
     <main class="ml-64 px-8 pb-12 min-h-screen max-w-[1440px] mx-auto">
-        <div class="flex items-center justify-between mb-8">
+        <div class="flex items-end justify-between mb-8">
             <div>
-                <h2 class="font-headline-md text-headline-md text-slate-900">Resumen del Panel</h2>
-                <p class="font-body-md text-body-md text-slate-500 mt-1">Bienvenido de nuevo. Esto es lo que está pasando con tus pagos hoy.</p>
+                <h1 class="font-headline-md text-headline-md text-slate-900 mb-1">Gestión de Clientes</h1>
+                <p class="font-body-md text-body-md text-slate-500">Administra y supervisa todas tus relaciones comerciales e historiales de pago.</p>
             </div>
-            <button class="flex items-center gap-2 px-6 py-3 bg-[#2563EB] text-white rounded-xl font-semibold shadow-sm hover:bg-blue-700 transition-all active:scale-[0.98]">
-                <span class="material-symbols-outlined">link</span>
-                Generar Link de Pago
-            </button>
-        </div>
-
-        <!-- Bento Grid Layout -->
-        <div class="grid grid-cols-12 gap-6">
-            <!-- Summary Stats -->
-            <div class="col-span-12 lg:col-span-4 bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-sm relative overflow-hidden">
-                <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#0F172A]"></div>
-                <div class="flex justify-between items-start mb-4">
-                    <p class="font-label-caps text-label-caps text-slate-500 uppercase tracking-wider">Ingresos Totales</p>
-                    <span class="material-symbols-outlined text-blue-600 bg-blue-50 p-2 rounded-lg">payments</span>
-                </div>
-                <h3 class="font-display-lg text-display-lg text-slate-900">$128,430.20</h3>
-                <div class="mt-4 flex items-center gap-2 text-green-600 font-medium text-sm">
-                    <span class="material-symbols-outlined text-sm">trending_up</span>
-                    <span>+12.5% desde el mes pasado</span>
-                </div>
-            </div>
-
-            <div class="col-span-12 lg:col-span-4 bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-sm relative overflow-hidden">
-                <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#2563EB]"></div>
-                <div class="flex justify-between items-start mb-4">
-                    <p class="font-label-caps text-label-caps text-slate-500 uppercase tracking-wider">Pagos Pendientes</p>
-                    <span class="material-symbols-outlined text-amber-600 bg-amber-50 p-2 rounded-lg">schedule</span>
-                </div>
-                <h3 class="font-display-lg text-display-lg text-slate-900">$12,050.00</h3>
-                <div class="mt-4 flex items-center gap-2 text-slate-500 font-medium text-sm">
-                    <span>14 transacciones esperando verificación</span>
-                </div>
-            </div>
-
-            <div class="col-span-12 lg:col-span-4 bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-sm relative overflow-hidden">
-                <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#64748B]"></div>
-                <div class="flex justify-between items-start mb-4">
-                    <p class="font-label-caps text-label-caps text-slate-500 uppercase tracking-wider">Links Exitosos</p>
-                    <span class="material-symbols-outlined text-emerald-600 bg-emerald-50 p-2 rounded-lg">check_circle</span>
-                </div>
-                <h3 class="font-display-lg text-display-lg text-slate-900">842</h3>
-                <div class="mt-4 flex items-center gap-2 text-slate-500 font-medium text-sm">
-                    <span>Tasa de conversión: 68.4%</span>
-                </div>
-            </div>
-
-            <!-- Revenue Chart Area -->
-            <div class="col-span-12 lg:col-span-8 bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-sm">
-                <div class="flex items-center justify-between mb-8">
-                    <h4 class="font-headline-sm text-headline-sm text-slate-900">Rendimiento de Ingresos</h4>
-                    <div class="flex gap-2">
-                        <button class="px-3 py-1 text-xs font-semibold rounded-md bg-slate-100 text-slate-900">7D</button>
-                        <button class="px-3 py-1 text-xs font-semibold rounded-md text-slate-500 hover:bg-slate-50">30D</button>
-                        <button class="px-3 py-1 text-xs font-semibold rounded-md text-slate-500 hover:bg-slate-50">12M</button>
-                    </div>
-                </div>
-                <div class="h-64 w-full bg-slate-50 rounded-lg flex items-end justify-between px-6 pb-4">
-                    <div class="w-8 bg-blue-200 rounded-t-sm h-[30%]"></div>
-                    <div class="w-8 bg-blue-300 rounded-t-sm h-[45%]"></div>
-                    <div class="w-8 bg-blue-400 rounded-t-sm h-[35%]"></div>
-                    <div class="w-8 bg-blue-600 rounded-t-sm h-[60%]"></div>
-                    <div class="w-8 bg-blue-400 rounded-t-sm h-[50%]"></div>
-                    <div class="w-8 bg-blue-300 rounded-t-sm h-[75%]"></div>
-                    <div class="w-8 bg-blue-600 rounded-t-sm h-[90%]"></div>
-                    <div class="w-8 bg-blue-500 rounded-t-sm h-[65%]"></div>
-                    <div class="w-8 bg-blue-300 rounded-t-sm h-[40%]"></div>
-                    <div class="w-8 bg-blue-600 rounded-t-sm h-[85%]"></div>
-                </div>
-            </div>
-
-            <!-- Recent Activity -->
-            <div class="col-span-12 lg:col-span-4 bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-sm">
-                <h4 class="font-headline-sm text-headline-sm text-slate-900 mb-6">Actividad Reciente</h4>
-                <div class="space-y-6">
-                    <div class="flex gap-4">
-                        <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined text-emerald-600 text-xl">add</span>
-                        </div>
-                        <div class="flex-1">
-                            <p class="text-sm font-semibold text-slate-900">Pago recibido de Acme Corp</p>
-                            <p class="text-xs text-slate-500">Hace 2 minutos • Factura #INV-2041</p>
-                        </div>
-                        <div class="text-sm font-bold text-slate-900">+$2,400</div>
-                    </div>
-                    <div class="flex gap-4">
-                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined text-blue-600 text-xl">link</span>
-                        </div>
-                        <div class="flex-1">
-                            <p class="text-sm font-semibold text-slate-900">Nuevo link de pago generado</p>
-                            <p class="text-xs text-slate-500">Hace 45 minutos • Diseño UI App Web</p>
-                        </div>
-                        <div class="text-xs font-semibold px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full h-fit">Activo</div>
-                    </div>
-                    <div class="flex gap-4">
-                        <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined text-slate-600 text-xl">person</span>
-                        </div>
-                        <div class="flex-1">
-                            <p class="text-sm font-semibold text-slate-900">Nuevo cliente agregado</p>
-                            <p class="text-xs text-slate-500">Hace 3 horas • Sarah Jenkins</p>
-                        </div>
-                    </div>
-                </div>
-                <button class="w-full mt-8 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                    Ver toda la actividad
+            <div class="flex gap-3">
+                <button class="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-lg transition-all border border-slate-200">
+                    <span class="material-symbols-outlined text-[18px]">download</span>
+                    Exportar Lista
+                </button>
+                <button class="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-lg transition-all shadow-lg shadow-blue-500/20">
+                    <span class="material-symbols-outlined text-[18px]">add</span>
+                    Agregar Cliente
                 </button>
             </div>
+        </div>
 
-            <!-- Transaction Table Section -->
-            <div class="col-span-12 bg-white border border-[#E2E8F0] rounded-xl shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-slate-100 flex items-center justify-between">
-                    <h4 class="font-headline-sm text-headline-sm text-slate-900">Últimas Transacciones</h4>
-                    <button class="text-sm font-semibold text-slate-600 flex items-center gap-1 hover:text-slate-900">
-                        Filtrar
-                        <span class="material-symbols-outlined text-sm">filter_list</span>
-                    </button>
+        <!-- Bento Stats Overview -->
+        <div class="grid grid-cols-12 gap-6 mb-10">
+            <div class="col-span-12 md:col-span-4 bg-white border border-slate-200 rounded-xl p-6 relative overflow-hidden shadow-sm">
+                <div class="absolute left-0 top-0 h-full w-[2px] bg-blue-600"></div>
+                <p class="font-label-caps text-label-caps text-slate-500 uppercase mb-2">Clientes Activos</p>
+                <div class="flex items-baseline gap-2">
+                    <span class="font-display-lg text-display-lg text-slate-900">1,284</span>
+                    <span class="text-green-600 text-sm font-bold flex items-center">
+                        <span class="material-symbols-outlined text-[16px]">arrow_upward</span>
+                        12%
+                    </span>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="bg-slate-50/50">
-                                <th class="px-6 py-3 font-label-caps text-label-caps text-slate-500 uppercase">Cliente</th>
-                                <th class="px-6 py-3 font-label-caps text-label-caps text-slate-500 uppercase">Estado</th>
-                                <th class="px-6 py-3 font-label-caps text-label-caps text-slate-500 uppercase">Fecha</th>
-                                <th class="px-6 py-3 font-label-caps text-label-caps text-slate-500 uppercase">Método</th>
-                                <th class="px-6 py-3 font-label-caps text-label-caps text-slate-500 uppercase text-right">Monto</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            <tr class="hover:bg-slate-50/50 transition-colors">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-xs text-slate-600">JD</div>
-                                        <div>
-                                            <p class="text-sm font-semibold text-slate-900">John Doe</p>
-                                            <p class="text-xs text-slate-500">john@example.com</p>
-                                        </div>
+            </div>
+            <div class="col-span-12 md:col-span-4 bg-white border border-slate-200 rounded-xl p-6 relative overflow-hidden shadow-sm">
+                <div class="absolute left-0 top-0 h-full w-[2px] bg-green-500"></div>
+                <p class="font-label-caps text-label-caps text-slate-500 uppercase mb-2">LTV Promedio</p>
+                <div class="flex items-baseline gap-2">
+                    <span class="font-display-lg text-display-lg text-slate-900">$2,450</span>
+                    <span class="text-slate-400 text-sm font-medium">por mes</span>
+                </div>
+            </div>
+            <div class="col-span-12 md:col-span-4 bg-white border border-slate-200 rounded-xl p-6 relative overflow-hidden shadow-sm">
+                <div class="absolute left-0 top-0 h-full w-[2px] bg-slate-900"></div>
+                <p class="font-label-caps text-label-caps text-slate-500 uppercase mb-2">Crecimiento</p>
+                <div class="flex items-baseline gap-2">
+                    <span class="font-display-lg text-display-lg text-slate-900">24.8%</span>
+                    <span class="text-green-600 text-sm font-bold flex items-center">
+                        <span class="material-symbols-outlined text-[16px]">trending_up</span>
+                        Estable
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Data Table Container -->
+        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+            <!-- Table Controls -->
+            <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 cursor-pointer hover:bg-slate-50 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">filter_list</span>
+                        Filtros
+                    </div>
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 cursor-pointer hover:bg-slate-50 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">sort</span>
+                        Ordenar
+                    </div>
+                </div>
+                <p class="text-xs font-label-caps text-slate-400 uppercase">Mostrando 10 de 1,284 clientes</p>
+            </div>
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-white border-b border-slate-100">
+                            <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs">Nombre del Cliente</th>
+                            <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs">Email</th>
+                            <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs text-right">Total Gastado</th>
+                            <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs">Último Pago</th>
+                            <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs">Estado</th>
+                            <th class="px-6 py-4"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        <tr class="hover:bg-slate-50/80 transition-colors group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">AM</div>
+                                    <div>
+                                        <p class="font-headline-sm text-sm text-slate-900 mb-0.5">Alex Morgan</p>
+                                        <p class="text-xs text-slate-400">Acme Corp</p>
                                     </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">Pagado</span>
-                                </td>
-                                <td class="px-6 py-4 text-sm text-slate-600">24 Oct, 2023</td>
-                                <td class="px-6 py-4 text-sm text-slate-600">Visa •••• 4242</td>
-                                <td class="px-6 py-4 text-sm font-bold text-slate-900 text-right">$599.00</td>
-                            </tr>
-                            <tr class="hover:bg-slate-50/50 transition-colors">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-xs text-slate-600">AS</div>
-                                        <div>
-                                            <p class="text-sm font-semibold text-slate-900">Alice Smith</p>
-                                            <p class="text-xs text-slate-500">alice@smith.co</p>
-                                        </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-600">alex.morgan@acme.com</td>
+                            <td class="px-6 py-4 text-sm text-slate-900 text-right font-medium">$12,450.00</td>
+                            <td class="px-6 py-4 text-sm text-slate-600">24 Oct, 2023</td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">Activo</span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <button class="text-slate-400 hover:text-slate-900 opacity-0 group-hover:opacity-100 transition-all">
+                                    <span class="material-symbols-outlined">more_horiz</span>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-slate-50/80 transition-colors group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold text-xs">SC</div>
+                                    <div>
+                                        <p class="font-headline-sm text-sm text-slate-900 mb-0.5">Sarah Chen</p>
+                                        <p class="text-xs text-slate-400">Nexus Digital</p>
                                     </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">Pendiente</span>
-                                </td>
-                                <td class="px-6 py-4 text-sm text-slate-600">23 Oct, 2023</td>
-                                <td class="px-6 py-4 text-sm text-slate-600">Transferencia Bancaria</td>
-                                <td class="px-6 py-4 text-sm font-bold text-slate-900 text-right">$1,250.00</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-600">schen@nexus.io</td>
+                            <td class="px-6 py-4 text-sm text-slate-900 text-right font-medium">$8,210.50</td>
+                            <td class="px-6 py-4 text-sm text-slate-600">22 Oct, 2023</td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">Activo</span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <button class="text-slate-400 hover:text-slate-900 opacity-0 group-hover:opacity-100 transition-all">
+                                    <span class="material-symbols-outlined">more_horiz</span>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-slate-50/80 transition-colors group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-xs">JP</div>
+                                    <div>
+                                        <p class="font-headline-sm text-sm text-slate-900 mb-0.5">James Peterson</p>
+                                        <p class="text-xs text-slate-400">Freelance</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-slate-600">james@peterson.design</td>
+                            <td class="px-6 py-4 text-sm text-slate-900 text-right font-medium">$1,900.00</td>
+                            <td class="px-6 py-4 text-sm text-slate-600">15 Oct, 2023</td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">Pendiente</span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <button class="text-slate-400 hover:text-slate-900 opacity-0 group-hover:opacity-100 transition-all">
+                                    <span class="material-symbols-outlined">more_horiz</span>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination -->
+            <div class="px-6 py-4 bg-slate-50/30 border-t border-slate-100 flex items-center justify-between">
+                <p class="text-sm text-slate-500">Página 1 de 129</p>
+                <div class="flex items-center gap-2">
+                    <button class="p-2 text-slate-400 hover:text-slate-900 disabled:opacity-30" disabled>
+                        <span class="material-symbols-outlined">chevron_left</span>
+                    </button>
+                    <div class="flex gap-1">
+                        <button class="w-8 h-8 rounded bg-slate-900 text-white text-xs font-bold">1</button>
+                        <button class="w-8 h-8 rounded hover:bg-slate-100 text-slate-600 text-xs font-medium">2</button>
+                        <button class="w-8 h-8 rounded hover:bg-slate-100 text-slate-600 text-xs font-medium">3</button>
+                        <span class="w-8 h-8 flex items-center justify-center text-slate-400">...</span>
+                    </div>
+                    <button class="p-2 text-slate-400 hover:text-slate-900">
+                        <span class="material-symbols-outlined">chevron_right</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -472,7 +467,6 @@
 
         // Logout functionality
         document.getElementById('logout-btn').addEventListener('click', () => {
-            // Limpiar sesión si fuera necesario (aquí es simple redirección)
             window.location.href = 'index.html'
         })
     </script>

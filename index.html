@@ -533,6 +533,20 @@
             window.electronAPI.close()
         })
 
+        // Check if "Remember User" is set on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedEmail = localStorage.getItem('rememberedEmail')
+            const savedPassword = localStorage.getItem('rememberedPassword')
+            
+            if (savedEmail) {
+                document.getElementById('email').value = savedEmail
+                document.getElementById('rememberUser').checked = true
+            }
+            if (savedPassword) {
+                document.getElementById('password').value = savedPassword
+            }
+        })
+
         // Update maximize/restore icon
         const updateMaximizeIcon = (isMaximized) => {
             const maxIcon = document.getElementById('max-icon')
@@ -567,6 +581,7 @@
             e.preventDefault()
             const email = document.getElementById('email').value
             const password = document.getElementById('password').value
+            const rememberUser = document.getElementById('rememberUser').checked
             
             const submitBtn = e.target.querySelector('.submit-btn')
             const originalBtnContent = submitBtn.innerHTML
@@ -589,8 +604,18 @@
 
                 if (data && data.accessToken) {
                     console.log('Login successful!', data.user.email)
-                    // Redirigir al dashboard
-                    window.location.href = 'dashboard.html'
+                    
+                    // Lógica de recordar usuario y contraseña
+                    if (rememberUser) {
+                        localStorage.setItem('rememberedEmail', email)
+                        localStorage.setItem('rememberedPassword', password)
+                    } else {
+                        localStorage.removeItem('rememberedEmail')
+                        localStorage.removeItem('rememberedPassword')
+                    }
+
+                    // Redirigir al layout maestro
+                    window.location.href = 'layout.html'
                 } else {
                     throw new Error('No se recibió el token de acceso')
                 }

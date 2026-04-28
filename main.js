@@ -1,5 +1,11 @@
 const { app, BrowserWindow, ipcMain } = require('electron/main')
 const path = require('node:path')
+const { autoUpdater } = require('electron-updater')
+const log = require('electron-log')
+
+// Configuración del log
+log.transports.file.level = "info"
+autoUpdater.logger = log
 
 // Configuración de Insforge
 const INSFORGE_URL = 'https://payforge.azokia.com'
@@ -87,6 +93,11 @@ ipcMain.on('window-close', () => {
 // Aplicación lista
 app.whenReady().then(() => {
   createWindow()
+
+  // Revisar actualizaciones si no estamos en macOS
+  if (process.platform !== 'darwin') {
+    autoUpdater.checkForUpdatesAndNotify()
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
