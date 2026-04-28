@@ -44,6 +44,14 @@ function createWindow () {
   mainWindow.on('unmaximize', () => {
     mainWindow.webContents.send('window-maximized', false)
   })
+
+  // Setup auto-updater events
+  autoUpdater.on('checking-for-update', () => mainWindow?.webContents.send('checking-for-update'))
+  autoUpdater.on('update-available', (info) => mainWindow?.webContents.send('update-available', info))
+  autoUpdater.on('update-not-available', () => mainWindow?.webContents.send('update-not-available'))
+  autoUpdater.on('download-progress', (progress) => mainWindow?.webContents.send('download-progress', progress))
+  autoUpdater.on('update-downloaded', (info) => mainWindow?.webContents.send('update-downloaded', info))
+  autoUpdater.on('error', (err) => mainWindow?.webContents.send('update-error', err.message || err))
 }
 
 // Auth handler usando REST API nativa
@@ -88,6 +96,12 @@ ipcMain.on('window-maximize', () => {
 
 ipcMain.on('window-close', () => {
   if (mainWindow) mainWindow.close()
+})
+
+ipcMain.handle('get-app-version', () => app.getVersion())
+
+ipcMain.on('install-update', () => {
+  autoUpdater.quitAndInstall(false, true)
 })
 
 // Aplicación lista

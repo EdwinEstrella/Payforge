@@ -498,6 +498,14 @@
                 </button>
             </form>
 
+            <!-- Updater Info -->
+            <div id="updater-container" style="margin-top: 24px; text-align: center; font-size: 11px; color: #76777d; font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">
+                <div id="app-version" style="margin-bottom: 4px;">Versión --</div>
+                <div id="updater-status" style="display: none; color: #505f76; background: #f6f3f5; padding: 6px; border-radius: 4px;">
+                    <!-- status text -->
+                </div>
+            </div>
+
             <!-- Divider and Google Sign In -->
             <div class="divider">
                 <button class="google-btn" id="googleSignIn" type="button">
@@ -641,6 +649,54 @@
             })
             input.addEventListener('blur', function() {
                 this.parentElement.classList.remove('focused')
+            })
+        })
+
+        // Updater logic
+        window.addEventListener('DOMContentLoaded', async () => {
+            const version = await window.electronAPI.getAppVersion()
+            document.getElementById('app-version').innerText = `Versión ${version}`
+
+            const updaterStatus = document.getElementById('updater-status')
+            
+            window.electronAPI.onUpdateEvents({
+                onChecking: () => {
+                    updaterStatus.style.display = 'block'
+                    updaterStatus.innerText = 'Buscando actualizaciones...'
+                },
+                onUpdateAvailable: (info) => {
+                    updaterStatus.style.display = 'block'
+                    updaterStatus.style.color = '#0066cc'
+                    updaterStatus.style.backgroundColor = '#e6f0fa'
+                    updaterStatus.innerText = 'Actualización disponible. Descargando...'
+                },
+                onUpdateNotAvailable: () => {
+                    updaterStatus.style.display = 'none'
+                },
+                onDownloadProgress: (progress) => {
+                    updaterStatus.style.display = 'block'
+                    updaterStatus.style.color = '#0066cc'
+                    updaterStatus.style.backgroundColor = '#e6f0fa'
+                    updaterStatus.innerText = `Descargando: ${Math.round(progress.percent)}%`
+                },
+                onUpdateDownloaded: (info) => {
+                    updaterStatus.style.display = 'block'
+                    updaterStatus.style.color = '#10b981'
+                    updaterStatus.style.backgroundColor = '#ecfdf5'
+                    updaterStatus.innerHTML = `Actualización lista. <a href="#" id="install-update-btn" style="color: #10b981; text-decoration: underline;">Instalar y reiniciar</a>`
+                    
+                    document.getElementById('install-update-btn').addEventListener('click', (e) => {
+                        e.preventDefault()
+                        window.electronAPI.installUpdate()
+                    })
+                },
+                onUpdateError: (err) => {
+                    updaterStatus.style.display = 'block'
+                    updaterStatus.style.color = '#ef4444'
+                    updaterStatus.style.backgroundColor = '#fef2f2'
+                    updaterStatus.innerText = `Error de actualización`
+                    console.error('Update error:', err)
+                }
             })
         })
     </script>
