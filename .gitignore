@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build output
+out/
+dist/
+
+# Debug logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env.local
+
+# Electron specific
+*.asar
+
+# Package manager locks (optional, uncomment if needed)
+# package-lock.json
+# yarn.lock
