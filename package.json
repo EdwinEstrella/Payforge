@@ -23,7 +23,7 @@
       "target": [
         "nsis"
       ],
-      "icon": "logo.ico",
+      "icon": "logo_blanco_negro.ico",
       "signAndEditExecutable": false
     },
     "nsis": {
@@ -31,9 +31,9 @@
       "perMachine": false,
       "allowElevation": true,
       "allowToChangeInstallationDirectory": true,
-      "installerIcon": "logo.ico",
-      "uninstallerIcon": "logo.ico",
-      "installerHeaderIcon": "logo.ico",
+      "installerIcon": "logo_blanco_negro.ico",
+      "uninstallerIcon": "logo_blanco_negro.ico",
+      "installerHeaderIcon": "logo_blanco_negro.ico",
       "runAfterFinish": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
