@@ -5,16 +5,24 @@ let mainWindow = null
 
 function createWindow () {
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1200,
+    height: 800,
+    minWidth: 800,
+    minHeight: 600,
     frame: false,
-    titleBarStyle: 'hidden',
+    show: false,
+    icon: path.join(__dirname, 'logo_blanco_negro.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
     }
   })
 
   mainWindow.loadFile('index.html')
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('https:')) return { action: 'allow' }
+    return { action: 'deny' }
+  })
+  mainWindow.show()
 
   // Notify renderer when window is maximized/unmaximized
   mainWindow.on('maximize', () => {
@@ -45,6 +53,7 @@ ipcMain.on('window-close', () => {
   if (mainWindow) mainWindow.close()
 })
 
+// Aplicación lista
 app.whenReady().then(() => {
   createWindow()
 
