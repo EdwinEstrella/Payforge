@@ -1,12 +1,9 @@
 const { app, BrowserWindow, ipcMain } = require('electron/main')
 const path = require('node:path')
-const { createClient } = require('@insforge/sdk')
 
-// Inicializar Insforge
-const insforge = createClient({
-  baseUrl: 'https://payforge.azokia.com',
-  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3OC0xMjM0LTU2NzgtOTBhYi1jZGVmMTIzNDU2NzgiLCJlbWFpbCI6ImFub25AaW5zZm9yZ2UuY29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MDAzOTl9.qFBw69Ih3UhdYWuEjzMDXuV8ElpzFRUc6Oi88sH7B90'
-})
+// Configuración de Insforge
+const INSFORGE_URL = 'https://payforge.azokia.com'
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3OC0xMjM0LTU2NzgtOTBhYi1jZGVmMTIzNDU2NzgiLCJlbWFpbCI6ImFub25AaW5zZm9yZ2UuY29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MDAzOTl9.qFBw69Ih3UhdYWuEjzMDXuV8ElpzFRUc6Oi88sH7B90'
 
 let mainWindow = null
 
@@ -29,6 +26,8 @@ function createWindow () {
     if (url.startsWith('https:')) return { action: 'allow' }
     return { action: 'deny' }
   })
+  
+  mainWindow.maximize() // Iniciar maximizada
   mainWindow.show()
 
   // Notify renderer when window is maximized/unmaximized
@@ -41,12 +40,28 @@ function createWindow () {
   })
 }
 
-// Auth handler
+// Auth handler usando REST API nativa
 ipcMain.handle('auth-login', async (event, { email, password }) => {
   try {
-    return await insforge.auth.signInWithPassword({ email, password })
+    const response = await fetch(`${INSFORGE_URL}/api/auth/sessions?client_type=desktop`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ANON_KEY}`
+      },
+      body: JSON.stringify({ email, password })
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      return { data: null, error: data }
+    }
+
+    return { data, error: null }
   } catch (error) {
-    return { data: null, error }
+    console.error('Fetch error:', error)
+    return { data: null, error: { message: 'Error de red o conexión al servidor' } }
   }
 })
 
