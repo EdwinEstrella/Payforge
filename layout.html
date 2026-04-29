@@ -217,6 +217,10 @@
                 <span class="material-symbols-outlined">history</span>
                 Historial
             </a>
+            <a data-page="links" class="nav-item flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white cursor-pointer transition-colors active:scale-[0.98] transition-transform duration-150">
+                <span class="material-symbols-outlined">link</span>
+                Links Generados
+            </a>
         </nav>
         <div class="mt-auto space-y-1 border-t border-slate-800 pt-4">
             <a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors cursor-pointer">
@@ -321,16 +325,207 @@
                 });
 
                 // Trigger page-specific logic
-                if (pageName === 'clients') {
+                if (pageName === 'dashboard') {
+                    loadDashboard();
+                } else if (pageName === 'clients') {
                     loadClients();
                     setupPaymentForm();
                 } else if (pageName === 'history') {
                     loadHistory();
+                } else if (pageName === 'links') {
+                    loadLinks();
                 }
             } catch (error) {
                 console.error('Error loading page:', error);
                 mainContent.innerHTML = '<h2>Error al cargar la página</h2>';
             }
+        }
+
+        // --- LINKS PAGE LOGIC ---
+
+        async function loadLinks() {
+            console.log('[Links] Iniciando carga de historial de enlaces...');
+            const tbody = document.getElementById('links-table-body');
+            if (!tbody) return;
+
+            const { data, error } = await window.electronAPI.getLinks();
+
+            if (error) {
+                console.error('[Links] Error al obtener datos:', error);
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-red-500">Error: ${error.message || error}</td></tr>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">No has generado ningún link todavía.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map(item => {
+                const date = new Date(item.created_at).toLocaleDateString('es-ES', {
+                    day: '2-digit', month: 'short', year: 'numeric'
+                });
+                const amount = (item.amount / 100).toLocaleString('en-US', { style: 'currency', currency: item.currency.toUpperCase() });
+                
+                return `
+                    <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-50">
+                        <td class="px-6 py-4 text-xs font-medium text-slate-500 uppercase">${date}</td>
+                        <td class="px-6 py-4 text-sm font-semibold text-slate-900">${item.description || 'Sin descripción'}</td>
+                        <td class="px-6 py-4 text-sm font-bold text-slate-900">${amount}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-2 max-w-[200px]">
+                                <span class="text-xs text-blue-600 truncate underline cursor-default">${item.url}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex justify-end gap-2">
+                                <button onclick="copyLink('${item.url}')" class="p-1.5 hover:bg-slate-100 rounded text-slate-500 hover:text-blue-600 transition-colors" title="Copiar Link">
+                                    <span class="material-symbols-outlined text-lg">content_copy</span>
+                                </button>
+                                <button onclick="deleteLink(${item.id})" class="p-1.5 hover:bg-red-50 rounded text-slate-500 hover:text-red-600 transition-colors" title="Eliminar">
+                                    <span class="material-symbols-outlined text-lg">delete</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.copyLink = (url) => {
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Link copiado al portapapeles');
+            });
+        }
+
+        window.deleteLink = async (id) => {
+            if (!confirm('¿Estás seguro de que quieres eliminar este link del historial? (Esto no cancela el link en Stripe)')) return;
+            
+            const { success, error } = await window.electronAPI.deleteLink(id);
+            if (success) {
+                loadLinks();
+            } else {
+                alert('Error al eliminar: ' + error);
+            }
+        }
+
+        // --- DASHBOARD PAGE LOGIC ---
+
+        async function loadDashboard() {
+            console.log('[Dashboard] Iniciando carga de datos reales...');
+            const elements = {
+                revenue: document.getElementById('dash-revenue'),
+                available: document.getElementById('dash-available'),
+                pending: document.getElementById('dash-pending'),
+                links: document.getElementById('dash-links'),
+                chart: document.getElementById('dash-chart'),
+                activity: document.getElementById('dash-activity')
+            };
+
+            if (!elements.revenue) return;
+
+            try {
+                // Obtener datos concurrentemente
+                const [balanceRes, historyRes] = await Promise.all([
+                    window.electronAPI.getBalance(),
+                    window.electronAPI.getHistory()
+                ]);
+
+                if (balanceRes.error) throw new Error(balanceRes.error);
+                if (historyRes.error) throw new Error(historyRes.error);
+
+                const balance = balanceRes.data;
+                const history = historyRes.data;
+
+                // 1. Procesar Balance
+                const availableAmount = (balance.available.reduce((acc, curr) => acc + curr.amount, 0)) / 100;
+                const pendingAmount = (balance.pending.reduce((acc, curr) => acc + curr.amount, 0)) / 100;
+                const totalRevenue = availableAmount + pendingAmount;
+                const currency = balance.available[0]?.currency.toUpperCase() || 'USD';
+
+                elements.revenue.innerText = totalRevenue.toLocaleString('en-US', { style: 'currency', currency });
+                elements.available.innerText = availableAmount.toLocaleString('en-US', { style: 'currency', currency });
+                elements.pending.innerText = pendingAmount.toLocaleString('en-US', { style: 'currency', currency });
+
+                // 2. Procesar Historial (Links Exitosos y Actividad Reciente)
+                const successfulPayments = history.filter(p => p.status === 'succeeded');
+                elements.links.innerText = successfulPayments.length;
+
+                // Actividad Reciente (últimos 4)
+                if (history.length === 0) {
+                    elements.activity.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">No hay actividad reciente.</p>';
+                } else {
+                    elements.activity.innerHTML = history.slice(0, 4).map(item => {
+                        const timeAgo = getTimeAgo(new Date(item.created_at));
+                        const isSuccess = item.status === 'succeeded';
+                        return `
+                            <div class="flex gap-4">
+                                <div class="w-10 h-10 rounded-full ${isSuccess ? 'bg-emerald-100' : 'bg-amber-100'} flex items-center justify-center shrink-0">
+                                    <span class="material-symbols-outlined ${isSuccess ? 'text-emerald-600' : 'text-amber-600'} text-xl">
+                                        ${isSuccess ? 'check' : 'pending'}
+                                    </span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-slate-900 line-clamp-1">${item.description || 'Pago de servicio'}</p>
+                                    <p class="text-xs text-slate-500">${timeAgo}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-bold text-slate-900">${(item.amount / 100).toLocaleString('en-US', { style: 'currency', currency: item.currency.toUpperCase() })}</p>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                // 3. Gráfico de Rendimiento (Últimos 10 días)
+                const last10Days = Array.from({ length: 10 }, (_, i) => {
+                    const d = new Date();
+                    d.setDate(d.getDate() - (9 - i));
+                    d.setHours(0, 0, 0, 0);
+                    return d;
+                });
+
+                const dailyRevenue = last10Days.map(date => {
+                    return history
+                        .filter(p => p.status === 'succeeded' && new Date(p.created_at).toDateString() === date.toDateString())
+                        .reduce((acc, curr) => acc + curr.amount, 0) / 100;
+                });
+
+                const maxRevenue = Math.max(...dailyRevenue, 1); // Evitar división por cero
+                elements.chart.innerHTML = dailyRevenue.map((amount, i) => {
+                    const height = (amount / maxRevenue) * 100;
+                    const dateStr = last10Days[i].toLocaleDateString('es-ES', { day: '2-digit' });
+                    return `
+                        <div class="flex flex-col items-center gap-2 group relative h-full justify-end" style="width: 8%;">
+                            <div class="absolute -top-8 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                ${amount.toLocaleString('en-US', { style: 'currency', currency })}
+                            </div>
+                            <div class="w-full bg-blue-600 rounded-t-sm transition-all duration-500 hover:bg-blue-700" 
+                                 style="height: ${Math.max(height, 5)}%"></div>
+                            <span class="text-[10px] text-slate-400 font-medium">${dateStr}</span>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                console.error('[Dashboard] Error cargando datos:', err);
+                elements.revenue.innerHTML = '<span class="text-xs text-red-500">Error al cargar</span>';
+            }
+        }
+
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            let interval = seconds / 31536000;
+            if (interval > 1) return `Hace ${Math.floor(interval)} años`;
+            interval = seconds / 2592000;
+            if (interval > 1) return `Hace ${Math.floor(interval)} meses`;
+            interval = seconds / 86400;
+            if (interval > 1) return `Hace ${Math.floor(interval)} días`;
+            interval = seconds / 3600;
+            if (interval > 1) return `Hace ${Math.floor(interval)} horas`;
+            interval = seconds / 60;
+            if (interval > 1) return `Hace ${Math.floor(interval)} minutos`;
+            return 'Hace un momento';
         }
 
         // --- HISTORY PAGE LOGIC ---

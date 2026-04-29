@@ -186,10 +186,64 @@ ipcMain.handle('stripe-create-link', async (event, payload) => {
     const session = await stripe.checkout.sessions.create(sessionConfig)
     console.log('Sesión creada:', session.id, session.url)
 
+    // GUARDAR LINK EN LA BASE DE DATOS
+    try {
+      await fetch(`${INSFORGE_URL}/api/database/records/payment_links`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${ANON_KEY}`,
+          'apikey': ANON_KEY
+        },
+        body: JSON.stringify({
+          url: session.url,
+          description: description,
+          amount: amount,
+          currency: currency.toUpperCase(),
+          created_at: new Date().toISOString()
+        })
+      })
+      console.log('Link guardado en Insforge DB');
+    } catch (saveErr) {
+      console.error('Error al guardar link en DB:', saveErr.message);
+    }
+
     return { data: { url: session.url, sessionId: session.id }, error: null }
   } catch (error) {
     console.error('Error creando Checkout Session:', error.message)
     return { data: null, error: { error: error.message } }
+  }
+})
+
+// Obtener historial de links generados
+ipcMain.handle('db-get-links', async () => {
+  try {
+    const response = await fetch(`${INSFORGE_URL}/api/database/records/payment_links?select=*&order=created_at.desc`, {
+      headers: {
+        'Authorization': `Bearer ${ANON_KEY}`,
+        'apikey': ANON_KEY
+      }
+    })
+    const data = await response.json()
+    return { data, error: response.ok ? null : data }
+  } catch (error) {
+    return { data: null, error: error.message }
+  }
+})
+
+// Eliminar un link del historial
+ipcMain.handle('db-delete-link', async (event, id) => {
+  try {
+    const response = await fetch(`${INSFORGE_URL}/api/database/records/payment_links?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${ANON_KEY}`,
+        'apikey': ANON_KEY
+      }
+    })
+    return { success: response.ok, error: response.ok ? null : 'No se pudo eliminar' }
+  } catch (error) {
+    return { success: false, error: error.message }
   }
 })
 
@@ -204,6 +258,16 @@ ipcMain.handle('db-get-history', async () => {
     })
     const data = await response.json()
     return { data, error: response.ok ? null : data }
+  } catch (error) {
+    return { data: null, error: error.message }
+  }
+})
+
+// Obtener el balance desde Stripe
+ipcMain.handle('stripe-get-balance', async () => {
+  try {
+    const balance = await stripe.balance.retrieve()
+    return { data: balance, error: null }
   } catch (error) {
     return { data: null, error: error.message }
   }

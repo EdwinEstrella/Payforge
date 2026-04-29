@@ -50,11 +50,14 @@ async function handleCheckoutSessionCompleted(session, stripe, insforge) {
   const customerEmail = session.customer_details.email;
   const customerName = session.customer_details.name;
 
+  // El estado inicial del cliente dependerá de si el pago se completó
+  const initialStatus = session.payment_status === 'paid' ? 'active' : 'incomplete';
+
   const { data: client, error: clientError } = await insforge.from('clients').upsert({
     email: customerEmail,
     name: customerName,
     stripe_customer_id: customerId,
-    status: 'active',
+    status: initialStatus,
     updated_at: new Date().toISOString()
   }, { onConflict: 'email' }).select().single();
 
@@ -62,6 +65,13 @@ async function handleCheckoutSessionCompleted(session, stripe, insforge) {
 
   if (session.mode === 'subscription' && session.subscription) {
     const subscription = await stripe.subscriptions.retrieve(session.subscription);
+    
+    // Si es suscripción, el estado del cliente debe sincronizarse con el de la suscripción
+    // (active, incomplete, past_due, etc.)
+    await insforge.from('clients').update({ 
+      status: subscription.status 
+    }).eq('id', client.id);
+
     await insforge.from('subscriptions').upsert({
       client_id: client.id,
       stripe_subscription_id: subscription.id,

@@ -34,6 +34,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // DB & Stripe Logic
   getClients: async () => ipcRenderer.invoke('db-get-clients'),
   getHistory: async () => ipcRenderer.invoke('db-get-history'),
+  getLinks: async () => ipcRenderer.invoke('db-get-links'),
+  deleteLink: async (id) => ipcRenderer.invoke('db-delete-link', id),
   createPaymentLink: async (data) => ipcRenderer.invoke('stripe-create-link', data),
-  syncStripeCustomers: async () => ipcRenderer.invoke('stripe-sync-customers')
+  syncStripeCustomers: async () => ipcRenderer.invoke('stripe-sync-customers'),
+  getBalance: async () => ipcRenderer.invoke('stripe-get-balance')
 })
