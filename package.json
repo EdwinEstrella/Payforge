@@ -1,6 +1,6 @@
 {
   "name": "payforge",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Payforge Desktop App",
   "author": "Edwin",
   "main": "main.js",
