@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://lh3.googleusercontent.com https://*.googleusercontent.com; connect-src 'self' https://payforge.azokia.com https://*.stripe.com;">
     <title>Payforge - Panel de Control</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -347,60 +348,73 @@
             }
         }
 
-        // --- CONTRACTS PAGE LOGIC ---
+        // --- CONTRACTS PAGE LOGIC --- (MATCHED)
 
-        const CONTRACT_TEMPLATE = `# CONTRATO DE PRESTACIÓN DE SERVICIOS
-## DESARROLLO DE APLICACIÓN MÓVIL FINTECH
+        const MASTER_CONTRACT_TEMPLATE = `# CONTRATO DE PRESTACIÓN DE SERVICIOS PROFESIONALES
+## {{CONTRACT_TYPE}}: {{PROJECT_NAME}}
 
-**Agencia Azokia LLC**
-
----
-
-## PARTES CONTRATANTES
-
-**EL CONTRATANTE:**
-- Nombre completo: {{CLIENT_NAME}}
-- Correo electrónico: {{CLIENT_EMAIL}}
-
-**EL CONTRATISTA:**
-- Agencia Azokia LLC
-- Dirección: Santo Domingo, República Dominicana
+**ENTRE:**
+1. **EL CONTRATANTE:** {{CLIENT_NAME}}, con correo electrónico {{CLIENT_EMAIL}}.
+2. **EL CONTRATISTA:** Agencia Azokia LLC, con domicilio en Santo Domingo, República Dominicana.
 
 ---
 
-## CLÁUSULA PRIMERA: OBJETO DEL CONTRATO
-EL CONTRATISTA se compromete a desarrollar una aplicación móvil fintech denominada:
-**Nombre de la aplicación:** {{PROJECT_NAME}}
+## CLÁUSULA PRIMERA: OBJETO Y ALCANCE
+EL CONTRATISTA se compromete a realizar el desarrollo personalizado del proyecto denominado **"{{PROJECT_NAME}}"**. El alcance del trabajo incluye específicamente los siguientes entregables:
 
-### El proyecto incluye específicamente:
-- Diseño UI/UX profesional
-- Integración completa con Stripe
-- Desarrollo de API REST
-- Base de datos escalable para 1,000,000 usuarios
-- Sistema de autenticación seguro
-- Panel de administración web
-- Hosteo en infraestructura profesional
+{{INCLUSIONS_LIST}}
 
 ---
 
-## CLÁUSULA TERCERA: CONDICIONES DE PAGO
-### 3.1 Costo Total de Implementación
-El costo total del desarrollo es de: **USD {{AMOUNT}}**
-
-### 3.2 Esquema de Pagos
-1. **50% al inicio** = USD {{AMOUNT_50}}
-2. **30% al primer entregable** = USD {{AMOUNT_30}}
-3. **20% al entrar en producción** = USD {{AMOUNT_20}}
+## CLÁUSULA SEGUNDA: CRONOGRAMA Y VIGENCIA
+**2.1 Tiempo de Ejecución:** Se estima un tiempo de entrega de **{{DEV_TIME}}**.
+**2.2 Vigencia:** El presente contrato tendrá una vigencia obligatoria de **18 meses** a partir de su firma. Una vez finalizado este periodo, el contrato permanecerá abierto bajo la modalidad de mes a mes, a menos que una de las partes notifique su terminación con 30 días de antelación.
 
 ---
 
-## FIRMAS Y ACEPTACIÓN
-En Santo Domingo, República Dominicana, a los {{DAY}} días del mes de {{MONTH}} del año {{YEAR}}.
+## CLÁUSULA TERCERA: CONDICIONES ECONÓMICAS
+**3.1 Inversión Total:** El costo total del proyecto es de **USD {{TOTAL_AMOUNT}}**.
+**3.2 Esquema de Pago:**
+{{PAYMENT_DETAILS}}
 
-### EL CONTRATANTE
-Firma: [Firma Digital Adjunta]
-Nombre: {{CLIENT_NAME}}
+{{RECURRING_SECTION}}
+
+---
+
+## CLÁUSULA CUARTA: OBLIGACIONES Y CONDUCTA
+**4.1 Del Contratista:** Entregar un producto que cumpla con los estándares de calidad, realizar las pruebas pertinentes y mantener comunicación constante sobre el progreso.
+**4.2 Del Contratante:** Proveer la información necesaria en tiempo y forma, realizar los pagos según el esquema acordado y mantener una conducta profesional y de respeto mutuo durante todo el proceso.
+
+---
+
+## CLÁUSULA QUINTA: CONFIDENCIALIDAD Y PROPIEDAD
+**5.1 Confidencialidad:** Ambas partes se obligan a no divulgar información técnica, comercial o estratégica compartida durante la ejecución del proyecto.
+**5.2 Propiedad Intelectual:** Una vez liquidado el pago total, la propiedad intelectual y los derechos de uso del software desarrollado serán transferidos íntegramente al CONTRATANTE.
+
+---
+
+## CLÁUSULA SEXTA: RESCISIÓN Y JURISDICCIÓN
+**6.1 Rescisión:** El incumplimiento de los pagos o la falta de entrega de materiales por más de 15 días hábiles será causa de rescisión inmediata sin responsabilidad para la parte afectada.
+**6.2 Jurisdicción:** Para cualquier controversia legal, las partes se someten a las leyes y tribunales de la ciudad de Santo Domingo, República Dominicana.
+
+---
+
+**ACEPTACIÓN DIGITAL**
+En fecha {{DATE_FULL}}, las partes aceptan los términos aquí descritos mediante firma digital vinculante.
 `;
+
+        window.addInclusionRow = () => {
+            const container = document.getElementById('inclusions-list');
+            const div = document.createElement('div');
+            div.className = 'flex gap-2 inclusion-item animate-in slide-in-from-left-2 duration-200';
+            div.innerHTML = `
+                <input type="text" placeholder="Nueva característica o entregable..." class="flex-1 rounded-lg border-slate-200 text-sm">
+                <button type="button" onclick="this.parentElement.remove()" class="p-2 text-slate-400 hover:text-red-500">
+                    <span class="material-symbols-outlined text-lg">delete</span>
+                </button>
+            `;
+            container.appendChild(div);
+        };
 
         async function loadContracts() {
             console.log('[Contracts] Cargando listado...');
@@ -481,13 +495,16 @@ Nombre: {{CLIENT_NAME}}
             const clientSelect = document.getElementById('contract-client');
             
             modal.classList.remove('hidden');
-            document.getElementById('contract-expiry').value = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
 
             // Cargar clientes
             const { data, error } = await window.electronAPI.getClients();
             if (data) {
-                clientSelect.innerHTML = '<option value="">Selecciona un cliente...</option>' + 
-                    data.map(cl => `<option value="${cl.id}" data-name="${cl.name}" data-email="${cl.email}">${cl.name} (${cl.email})</option>`).join('');
+                let optionsHTML = '<option value="">Selecciona...</option>';
+                for(let i=0; i<data.length; i++) {
+                    const cl = data[i];
+                    optionsHTML += '<option value="' + cl.id + '" data-name="' + cl.name + '" data-email="' + cl.email + '">' + cl.name + '</option>';
+                }
+                clientSelect.innerHTML = optionsHTML;
             }
         };
 
@@ -501,11 +518,11 @@ Nombre: {{CLIENT_NAME}}
             if (isManualClient) {
                 selectCont.classList.add('hidden');
                 manualCont.classList.remove('hidden');
-                btn.innerText = 'Seleccionar de la lista';
+                btn.innerText = 'Lista';
             } else {
                 selectCont.classList.remove('hidden');
                 manualCont.classList.add('hidden');
-                btn.innerText = 'Ingresar Manualmente';
+                btn.innerText = 'Manual';
             }
         };
 
@@ -513,41 +530,20 @@ Nombre: {{CLIENT_NAME}}
             document.getElementById('contract-modal').classList.add('hidden');
             document.getElementById('contract-form').reset();
             document.getElementById('contract-link-result').classList.add('hidden');
+            document.getElementById('inclusions-list').innerHTML = `
+                <div class="flex gap-2 inclusion-item">
+                    <input type="text" placeholder="Ej: Diseño de Interfaz UI/UX" class="flex-1 rounded-lg border-slate-200 text-sm">
+                    <button type="button" onclick="this.parentElement.remove()" class="p-2 text-slate-400 hover:text-red-500">
+                        <span class="material-symbols-outlined text-lg">delete</span>
+                    </button>
+                </div>
+            `;
             isManualClient = false;
             document.getElementById('client-select-container').classList.remove('hidden');
             document.getElementById('client-manual-container').classList.add('hidden');
-            document.getElementById('toggle-client-btn').innerText = 'Ingresar Manualmente';
         };
 
-        window.loadDefaultTemplate = () => {
-            const clientSelect = document.getElementById('contract-client');
-            const selected = clientSelect.options[clientSelect.selectedIndex];
-            
-            let clientName = isManualClient ? document.getElementById('manual-client-name').value : (selected?.dataset.name || '[Nombre del Cliente]');
-            let clientEmail = isManualClient ? document.getElementById('manual-client-email').value : (selected?.dataset.email || '[Email del Cliente]');
-            
-            const projectName = document.getElementById('contract-project').value || '[Nombre del Proyecto]';
-            const amount = parseFloat(document.getElementById('contract-amount').value) || 0;
-            
-            const now = new Date();
-            const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-
-            let terms = CONTRACT_TEMPLATE
-                .replace(/{{CLIENT_NAME}}/g, clientName)
-                .replace(/{{CLIENT_EMAIL}}/g, clientEmail)
-                .replace(/{{PROJECT_NAME}}/g, projectName)
-                .replace(/{{AMOUNT}}/g, amount.toLocaleString('en-US', { minimumFractionDigits: 2 }))
-                .replace(/{{AMOUNT_50}}/g, (amount * 0.5).toLocaleString('en-US', { minimumFractionDigits: 2 }))
-                .replace(/{{AMOUNT_30}}/g, (amount * 0.3).toLocaleString('en-US', { minimumFractionDigits: 2 }))
-                .replace(/{{AMOUNT_20}}/g, (amount * 0.2).toLocaleString('en-US', { minimumFractionDigits: 2 }))
-                .replace(/{{DAY}}/g, now.getDate())
-                .replace(/{{MONTH}}/g, months[now.getMonth()])
-                .replace(/{{YEAR}}/g, now.getFullYear());
-            
-            document.getElementById('contract-terms').value = terms;
-        };
-
-        // Form Submit
+        // Form Submit Refactored
         document.addEventListener('submit', async (e) => {
             if (e.target.id === 'contract-form') {
                 e.preventDefault();
@@ -555,17 +551,67 @@ Nombre: {{CLIENT_NAME}}
                 btn.disabled = true;
                 btn.innerText = 'Generando...';
 
+                // 1. Recolectar Inclusiones
+                const inclusions = Array.from(document.querySelectorAll('#inclusions-list input'))
+                    .map(input => input.value.trim())
+                    .filter(val => val !== '');
+                
+                const inclusionsText = inclusions.map(item => `- ${item}`).join('\n');
+
+                // 2. Esquema de Pago
+                const amount = parseFloat(document.getElementById('contract-amount').value) || 0;
+                const scheme = document.getElementById('payment-scheme').value;
+                let paymentDetails = '';
+
+                if (scheme === '50-50') {
+                    paymentDetails = `1. **50% de anticipo:** USD ${(amount * 0.5).toLocaleString('en-US', { minimumFractionDigits: 2 })}\n2. **50% contra entrega:** USD ${(amount * 0.5).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+                } else if (scheme === '3-parts') {
+                    paymentDetails = `1. **30% Inicio:** USD ${(amount * 0.3).toLocaleString('en-US', { minimumFractionDigits: 2 })}\n2. **40% Hito Intermedio:** USD ${(amount * 0.4).toLocaleString('en-US', { minimumFractionDigits: 2 })}\n3. **30% Entrega Final:** USD ${(amount * 0.3).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+                } else {
+                    paymentDetails = `1. **100% Pago Único:** USD ${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} (Pago por adelantado)`;
+                }
+
+                // 3. Recurrentes
+                const recurring = parseFloat(document.getElementById('recurring-amount').value) || 0;
+                const recurringSection = recurring > 0 ? `**3.3 Costos Recurrentes:** Se establece un cargo mensual de **USD ${recurring.toLocaleString('en-US', { minimumFractionDigits: 2 })}** por concepto de mantenimiento, hosting y soporte técnico.` : '';
+
+                // 4. Armar el Contrato con el Master Template
+                const clientSelect = document.getElementById('contract-client');
+                const selected = clientSelect.options[clientSelect.selectedIndex];
+                const clientName = isManualClient ? document.getElementById('manual-client-name').value : (selected?.dataset.name || 'Cliente');
+                const clientEmail = isManualClient ? document.getElementById('manual-client-email').value : (selected?.dataset.email || 'Email');
+                const projectName = document.getElementById('contract-project').value;
+                const devTimeValue = document.getElementById('dev-time-value').value;
+                const devTimeUnit = document.getElementById('dev-time-unit').value;
+                const devTime = `${devTimeValue} ${devTimeUnit}`;
+
+                const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                const now = new Date();
+                const dateFull = `${now.getDate()} de ${months[now.getMonth()]} del ${now.getFullYear()}`;
+
+                const finalTerms = MASTER_CONTRACT_TEMPLATE
+                    .replace(/{{CONTRACT_TYPE}}/g, document.getElementById('contract-type').value)
+                    .replace(/{{PROJECT_NAME}}/g, projectName)
+                    .replace(/{{CLIENT_NAME}}/g, clientName)
+                    .replace(/{{CLIENT_EMAIL}}/g, clientEmail)
+                    .replace(/{{INCLUSIONS_LIST}}/g, inclusionsText)
+                    .replace(/{{DEV_TIME}}/g, devTime)
+                    .replace(/{{TOTAL_AMOUNT}}/g, amount.toLocaleString('en-US', { minimumFractionDigits: 2 }))
+                    .replace(/{{PAYMENT_DETAILS}}/g, paymentDetails)
+                    .replace(/{{RECURRING_SECTION}}/g, recurringSection)
+                    .replace(/{{DATE_FULL}}/g, dateFull);
+
                 const payload = {
-                    description: document.getElementById('contract-project').value,
-                    amount: parseFloat(document.getElementById('contract-amount').value),
-                    terms: document.getElementById('contract-terms').value
+                    description: projectName,
+                    amount: amount,
+                    terms: finalTerms
                 };
 
                 if (isManualClient) {
-                    payload.client_name = document.getElementById('manual-client-name').value;
-                    payload.client_email = document.getElementById('manual-client-email').value;
+                    payload.client_name = clientName;
+                    payload.client_email = clientEmail;
                 } else {
-                    payload.client_id = document.getElementById('contract-client').value;
+                    payload.client_id = clientSelect.value;
                 }
 
                 const { data, error } = await window.electronAPI.createContract(payload);

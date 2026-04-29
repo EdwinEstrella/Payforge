@@ -6,7 +6,7 @@
             <p class="text-slate-500 font-medium">Gestiona acuerdos legales y firmas digitales con tus clientes.</p>
         </div>
         <button onclick="openContractModal()" class="px-6 py-3 bg-black text-white rounded-xl font-bold flex items-center gap-2 hover:bg-slate-800 transition-all shadow-lg active:scale-95">
-            <span class="material-symbols-outlined">add_description</span>
+            <span class="material-symbols-outlined">insert_drive_file</span>
             Nuevo Contrato
         </button>
     </div>
@@ -70,50 +70,104 @@
             </button>
         </div>
         
-        <form id="contract-form" class="flex-1 overflow-y-auto p-8 space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Cliente -->
+        <form id="contract-form" class="flex-1 overflow-y-auto p-8 space-y-8">
+            <!-- Sección 1: Datos Básicos -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
-                        <label class="text-sm font-bold text-slate-700">Cliente</label>
-                        <button type="button" onclick="toggleNewClient()" id="toggle-client-btn" class="text-[10px] bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-bold hover:bg-slate-200">Ingresar Manualmente</button>
+                        <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Cliente</label>
+                        <button type="button" onclick="toggleNewClient()" id="toggle-client-btn" class="text-[10px] bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-bold hover:bg-slate-200">Manual</button>
                     </div>
-                    
                     <div id="client-select-container">
                         <select id="contract-client" class="w-full rounded-xl border-slate-200 text-sm focus:ring-black focus:border-black">
-                            <option value="">Selecciona un cliente...</option>
+                            <option value="">Selecciona...</option>
                         </select>
                     </div>
-                    
-                    <div id="client-manual-container" class="hidden space-y-3 p-3 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                        <input type="text" id="manual-client-name" placeholder="Nombre completo del cliente" class="w-full rounded-lg border-slate-200 text-sm focus:ring-black focus:border-black">
-                        <input type="email" id="manual-client-email" placeholder="correo@ejemplo.com" class="w-full rounded-lg border-slate-200 text-sm focus:ring-black focus:border-black">
+                    <div id="client-manual-container" class="hidden space-y-2">
+                        <input type="text" id="manual-client-name" placeholder="Nombre completo" class="w-full rounded-lg border-slate-200 text-sm">
+                        <input type="email" id="manual-client-email" placeholder="Email" class="w-full rounded-lg border-slate-200 text-sm">
                     </div>
                 </div>
-                <!-- Proyecto -->
+
                 <div class="space-y-2">
-                    <label class="text-sm font-bold text-slate-700">Nombre del Proyecto</label>
-                    <input type="text" id="contract-project" placeholder="Ej: Desarrollo App Fintech" class="w-full rounded-xl border-slate-200 text-sm focus:ring-black focus:border-black" required>
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Tipo de Proyecto</label>
+                    <select id="contract-type" class="w-full rounded-xl border-slate-200 text-sm">
+                        <option value="Web Personalizada">Web Personalizada</option>
+                        <option value="Aplicación de Escritorio">Aplicación de Escritorio</option>
+                        <option value="Mantenimiento / Soporte">Mantenimiento / Soporte</option>
+                        <option value="Consultoría IT">Consultoría IT</option>
+                    </select>
                 </div>
-                <!-- Monto -->
+
                 <div class="space-y-2">
-                    <label class="text-sm font-bold text-slate-700">Monto del Contrato (USD)</label>
-                    <input type="number" id="contract-amount" placeholder="9500" class="w-full rounded-xl border-slate-200 text-sm focus:ring-black focus:border-black" required>
-                </div>
-                <!-- Fecha Vencimiento (Informativo) -->
-                <div class="space-y-2">
-                    <label class="text-sm font-bold text-slate-700">Vigencia (Auto-calculado)</label>
-                    <input type="text" id="contract-expiry" class="w-full rounded-xl border-slate-100 bg-slate-50 text-sm text-slate-500" readonly>
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Nombre del Proyecto</label>
+                    <input type="text" id="contract-project" placeholder="Ej: CRM Interno Azokia" class="w-full rounded-xl border-slate-200 text-sm focus:ring-black focus:border-black" required>
                 </div>
             </div>
 
-            <!-- Términos y Cláusulas -->
-            <div class="space-y-2">
-                <div class="flex items-center justify-between">
-                    <label class="text-sm font-bold text-slate-700">Cuerpo del Contrato / Cláusulas</label>
-                    <button type="button" onclick="loadDefaultTemplate()" class="text-xs text-blue-600 font-bold hover:underline">Cargar Plantilla Estándar</button>
+            <!-- Sección 2: Cronograma y Costos -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Monto Total (USD)</label>
+                    <input type="number" id="contract-amount" placeholder="0.00" class="w-full rounded-xl border-slate-200 text-sm font-bold text-slate-900">
                 </div>
-                <textarea id="contract-terms" rows="12" class="w-full rounded-xl border-slate-200 text-xs font-mono focus:ring-black focus:border-black" placeholder="Pega aquí los términos del contrato..." required></textarea>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Esquema de Pago</label>
+                    <select id="payment-scheme" class="w-full rounded-xl border-slate-200 text-sm">
+                        <option value="50-50">50% Anticipo / 50% Entrega</option>
+                        <option value="3-parts">30% Inicio / 40% Hito / 30% Final</option>
+                        <option value="100-upfront">100% Por Adelantado</option>
+                    </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Tiempo de Desarrollo</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="dev-time-value" placeholder="4" class="w-20 rounded-xl border-slate-200 text-sm">
+                        <select id="dev-time-unit" class="flex-1 rounded-xl border-slate-200 text-sm">
+                            <option value="semanas">Semanas</option>
+                            <option value="meses">Meses</option>
+                            <option value="días">Días</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Costo Recurrente (USD)</label>
+                    <input type="number" id="recurring-amount" placeholder="Ej: 50.00" class="w-full rounded-xl border-slate-200 text-sm">
+                </div>
+            </div>
+
+            <!-- Sección 3: Inclusiones (Dinámico) -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <label class="text-sm font-bold text-slate-900">¿Qué incluye el proyecto?</label>
+                    <button type="button" onclick="addInclusionRow()" class="flex items-center gap-1 text-xs bg-black text-white px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-all">
+                        <span class="material-symbols-outlined text-sm">add</span>
+                        Agregar Línea
+                    </button>
+                </div>
+                <div id="inclusions-list" class="space-y-2">
+                    <!-- Se llena con JS -->
+                    <div class="flex gap-2 inclusion-item">
+                        <input type="text" placeholder="Ej: Diseño de Interfaz UI/UX" class="flex-1 rounded-lg border-slate-200 text-sm">
+                        <button type="button" onclick="this.parentElement.remove()" class="p-2 text-slate-400 hover:text-red-500">
+                            <span class="material-symbols-outlined text-lg">delete</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 4: Cláusulas Estándar (Info) -->
+            <div class="p-4 bg-slate-100 rounded-xl border border-slate-200 space-y-2">
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Cláusulas Legales Automáticas</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <span class="flex items-center gap-1 text-[10px] font-bold text-slate-700"><span class="material-symbols-outlined text-xs text-green-600">verified</span> Confidencialidad</span>
+                    <span class="flex items-center gap-1 text-[10px] font-bold text-slate-700"><span class="material-symbols-outlined text-xs text-green-600">verified</span> Propiedad Intelectual</span>
+                    <span class="flex items-center gap-1 text-[10px] font-bold text-slate-700"><span class="material-symbols-outlined text-xs text-green-600">verified</span> Rescisión (18 meses)</span>
+                    <span class="flex items-center gap-1 text-[10px] font-bold text-slate-700"><span class="material-symbols-outlined text-xs text-green-600">verified</span> Jurisdicción Legal</span>
+                </div>
             </div>
 
             <div id="contract-link-result" class="hidden p-4 bg-green-50 border border-green-100 rounded-xl">
