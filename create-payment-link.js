@@ -12,17 +12,20 @@ export default async function(request) {
   }
 
   try {
-    console.log('1. Función iniciada');
-
     const key = Deno.env.get('STRIPE_SECRET_KEY');
-    console.log('2. Key encontrada:', !!key);
-    if (!key) throw new Error('STRIPE_SECRET_KEY no configurada');
+    if (!key) {
+      return new Response(JSON.stringify({ 
+        error: 'STRIPE_SECRET_KEY no configurada en el entorno de la edge function',
+        hint: 'Configurar la variable de entorno STRIPE_SECRET_KEY en InsForge'
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     const stripe = new Stripe(key, { apiVersion: '2024-06-20' });
-    console.log('3. Stripe inicializado');
 
     const body = await request.json();
-    console.log('4. Body:', JSON.stringify(body));
 
     const { amount, description = 'Pago de Servicio', type = 'payment', interval = 'month', currency = 'usd' } = body;
 
@@ -62,9 +65,7 @@ export default async function(request) {
       sessionConfig.customer_creation = 'always';
     }
 
-    console.log('5. Creando sesión Stripe...');
     const session = await stripe.checkout.sessions.create(sessionConfig);
-    console.log('6. Sesión creada:', session.id);
 
     return new Response(JSON.stringify({ url: session.url, sessionId: session.id }), {
       status: 200,
@@ -72,8 +73,11 @@ export default async function(request) {
     });
 
   } catch (err) {
-    console.error('❌ Error:', err.message, err.stack);
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ 
+      error: err.message,
+      type: err.constructor?.name || 'Unknown',
+      stack: err.stack?.split('\n').slice(0, 3).join('\n')
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });

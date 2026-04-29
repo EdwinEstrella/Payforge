@@ -3,6 +3,7 @@ require('dotenv').config({ path: path.join(__dirname, '.env') })
 const { app, BrowserWindow, ipcMain } = require('electron/main')
 const { autoUpdater } = require('electron-updater')
 const log = require('electron-log')
+const Stripe = require('stripe')
 
 // Configuración del log
 log.transports.file.level = "info"
@@ -11,6 +12,9 @@ autoUpdater.logger = log
 // Configuración de Insforge desde variables de entorno
 const INSFORGE_URL = process.env.INSFORGE_BASE_URL
 const ANON_KEY = process.env.INSFORGE_ANON_KEY
+
+// Stripe SDK directo en Node.js (sin edge function)
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 let mainWindow = null
 
@@ -143,25 +147,49 @@ ipcMain.handle('stripe-sync-customers', async () => {
   }
 })
 
-// Generar link de pago dinámico
+// Generar link de pago dinámico (Stripe SDK directo)
 ipcMain.handle('stripe-create-link', async (event, payload) => {
   try {
-    console.log('Generando link de pago con payload:', payload);
-    const response = await fetch(`${INSFORGE_URL}/functions/create-payment-link-handler`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${ANON_KEY}`,
-        'apikey': ANON_KEY
-      },
-      body: JSON.stringify(payload)
-    })
-    const data = await response.json()
-    console.log('Respuesta generación link:', data);
-    return { data, error: response.ok ? null : data }
+    const { description = 'Pago de Servicio', amount, type = 'payment', interval = 'month', currency = 'usd' } = payload
+
+    if (!amount) {
+      return { data: null, error: { error: 'El monto es obligatorio' } }
+    }
+
+    if (!['payment', 'subscription'].includes(type)) {
+      return { data: null, error: { error: 'type debe ser payment o subscription' } }
+    }
+
+    const priceData = {
+      currency,
+      product_data: { name: description },
+      unit_amount: amount,
+    }
+
+    if (type === 'subscription') {
+      priceData.recurring = { interval }
+    }
+
+    const sessionConfig = {
+      payment_method_types: ['card'],
+      line_items: [{ price_data: priceData, quantity: 1 }],
+      mode: type,
+      success_url: 'https://payforge.azokia.com/success?session_id={CHECKOUT_SESSION_ID}',
+      cancel_url: 'https://payforge.azokia.com/cancel',
+    }
+
+    if (type === 'payment') {
+      sessionConfig.customer_creation = 'always'
+    }
+
+    console.log('Creando Checkout Session con Stripe SDK...', { description, amount, type })
+    const session = await stripe.checkout.sessions.create(sessionConfig)
+    console.log('Sesión creada:', session.id, session.url)
+
+    return { data: { url: session.url, sessionId: session.id }, error: null }
   } catch (error) {
-    console.error('Error generando link:', error);
-    return { data: null, error: error.message }
+    console.error('Error creando Checkout Session:', error.message)
+    return { data: null, error: { error: error.message } }
   }
 })
 
