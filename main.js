@@ -273,6 +273,85 @@ ipcMain.handle('stripe-get-balance', async () => {
   }
 })
 
+// --- CONTRATOS HANDLERS ---
+
+ipcMain.handle('db-get-contracts', async () => {
+  try {
+    const response = await fetch(`${INSFORGE_URL}/api/database/records/contracts?select=*,clients(name,email)&order=created_at.desc`, {
+      headers: { 'Authorization': `Bearer ${ANON_KEY}`, 'apikey': ANON_KEY }
+    })
+    const data = await response.json()
+    return { data, error: response.ok ? null : data }
+  } catch (error) {
+    return { data: null, error: error.message }
+  }
+})
+
+ipcMain.handle('db-create-contract', async (event, payload) => {
+  try {
+    // Calcular expiración (+7 días)
+    const expiryAt = new Date()
+    expiryAt.setDate(expiryAt.getDate() + 7)
+
+    // Si el cliente es manual, podríamos crear un registro de cliente temporal 
+    // o simplemente guardar el nombre/email en el contrato.
+    // Vamos a guardarlo directamente en el contrato para máxima flexibilidad.
+
+    const response = await fetch(`${INSFORGE_URL}/api/database/records/contracts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ANON_KEY}`,
+        'apikey': ANON_KEY,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        ...payload,
+        status: 'pending',
+        expiry_at: expiryAt.toISOString(),
+        created_at: new Date().toISOString()
+      })
+    })
+    const data = await response.json()
+    return { data: data[0], error: response.ok ? null : data }
+  } catch (error) {
+    return { data: null, error: error.message }
+  }
+})
+
+ipcMain.handle('db-cancel-contract', async (event, { id, reason, detail }) => {
+  try {
+    const response = await fetch(`${INSFORGE_URL}/api/database/records/contracts?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ANON_KEY}`,
+        'apikey': ANON_KEY
+      },
+      body: JSON.stringify({
+        status: 'cancelled',
+        cancel_reason: reason,
+        cancel_detail: detail
+      })
+    })
+    return { success: response.ok, error: response.ok ? null : 'Error al cancelar' }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+})
+
+ipcMain.handle('db-delete-contract', async (event, id) => {
+  try {
+    const response = await fetch(`${INSFORGE_URL}/api/database/records/contracts?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${ANON_KEY}`, 'apikey': ANON_KEY }
+    })
+    return { success: response.ok, error: response.ok ? null : 'Error al eliminar' }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+})
+
 // Aplicación lista
 app.whenReady().then(() => {
   createWindow()

@@ -38,5 +38,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   deleteLink: async (id) => ipcRenderer.invoke('db-delete-link', id),
   createPaymentLink: async (data) => ipcRenderer.invoke('stripe-create-link', data),
   syncStripeCustomers: async () => ipcRenderer.invoke('stripe-sync-customers'),
-  getBalance: async () => ipcRenderer.invoke('stripe-get-balance')
+  getBalance: async () => ipcRenderer.invoke('stripe-get-balance'),
+
+  // Contratos
+  getContracts: async () => ipcRenderer.invoke('db-get-contracts'),
+  createContract: async (data) => ipcRenderer.invoke('db-create-contract', data),
+  cancelContract: async (id, reason, detail) => ipcRenderer.invoke('db-cancel-contract', { id, reason, detail }),
+  deleteContract: async (id) => ipcRenderer.invoke('db-delete-contract', id)
 })

@@ -221,6 +221,10 @@
                 <span class="material-symbols-outlined">link</span>
                 Links Generados
             </a>
+            <a data-page="contracts" class="nav-item flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white cursor-pointer transition-colors active:scale-[0.98] transition-transform duration-150">
+                <span class="material-symbols-outlined">description</span>
+                Contratos
+            </a>
         </nav>
         <div class="mt-auto space-y-1 border-t border-slate-800 pt-4">
             <a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white transition-colors cursor-pointer">
@@ -334,12 +338,291 @@
                     loadHistory();
                 } else if (pageName === 'links') {
                     loadLinks();
+                } else if (pageName === 'contracts') {
+                    loadContracts();
                 }
             } catch (error) {
                 console.error('Error loading page:', error);
                 mainContent.innerHTML = '<h2>Error al cargar la página</h2>';
             }
         }
+
+        // --- CONTRACTS PAGE LOGIC ---
+
+        const CONTRACT_TEMPLATE = `# CONTRATO DE PRESTACIÓN DE SERVICIOS
+## DESARROLLO DE APLICACIÓN MÓVIL FINTECH
+
+**Agencia Azokia LLC**
+
+---
+
+## PARTES CONTRATANTES
+
+**EL CONTRATANTE:**
+- Nombre completo: {{CLIENT_NAME}}
+- Correo electrónico: {{CLIENT_EMAIL}}
+
+**EL CONTRATISTA:**
+- Agencia Azokia LLC
+- Dirección: Santo Domingo, República Dominicana
+
+---
+
+## CLÁUSULA PRIMERA: OBJETO DEL CONTRATO
+EL CONTRATISTA se compromete a desarrollar una aplicación móvil fintech denominada:
+**Nombre de la aplicación:** {{PROJECT_NAME}}
+
+### El proyecto incluye específicamente:
+- Diseño UI/UX profesional
+- Integración completa con Stripe
+- Desarrollo de API REST
+- Base de datos escalable para 1,000,000 usuarios
+- Sistema de autenticación seguro
+- Panel de administración web
+- Hosteo en infraestructura profesional
+
+---
+
+## CLÁUSULA TERCERA: CONDICIONES DE PAGO
+### 3.1 Costo Total de Implementación
+El costo total del desarrollo es de: **USD {{AMOUNT}}**
+
+### 3.2 Esquema de Pagos
+1. **50% al inicio** = USD {{AMOUNT_50}}
+2. **30% al primer entregable** = USD {{AMOUNT_30}}
+3. **20% al entrar en producción** = USD {{AMOUNT_20}}
+
+---
+
+## FIRMAS Y ACEPTACIÓN
+En Santo Domingo, República Dominicana, a los {{DAY}} días del mes de {{MONTH}} del año {{YEAR}}.
+
+### EL CONTRATANTE
+Firma: [Firma Digital Adjunta]
+Nombre: {{CLIENT_NAME}}
+`;
+
+        async function loadContracts() {
+            console.log('[Contracts] Cargando listado...');
+            const tbody = document.getElementById('contracts-table-body');
+            if (!tbody) return;
+
+            const { data, error } = await window.electronAPI.getContracts();
+
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-red-500">Error: ${error.message || error}</td></tr>`;
+                return;
+            }
+
+            // Actualizar Stats
+            document.getElementById('stat-total-contracts').innerText = data.length;
+            document.getElementById('stat-pending-contracts').innerText = data.filter(c => c.status === 'pending').length;
+            document.getElementById('stat-signed-contracts').innerText = data.filter(c => c.status === 'signed').length;
+            document.getElementById('stat-cancelled-contracts').innerText = data.filter(c => c.status === 'cancelled').length;
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">No hay contratos registrados.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map(c => {
+                const clientName = c.clients?.name || 'Cliente Desconocido';
+                const projectName = c.description || 'Proyecto sin nombre';
+                const amount = (c.amount || 0).toLocaleString('en-US', { style: 'currency', currency: c.currency || 'USD' });
+                const expiry = new Date(c.expiry_at).toLocaleDateString();
+                
+                const statusMap = {
+                    pending: { label: 'Pendiente', bg: 'bg-amber-100', text: 'text-amber-700' },
+                    signed: { label: 'Firmado', bg: 'bg-green-100', text: 'text-green-700' },
+                    cancelled: { label: 'Cancelado', bg: 'bg-red-100', text: 'text-red-700' }
+                };
+                const s = statusMap[c.status] || statusMap.pending;
+
+                return `
+                    <tr class="hover:bg-slate-50 border-b border-slate-50 transition-colors">
+                        <td class="px-6 py-4">
+                            <p class="text-sm font-bold text-slate-900">${projectName}</p>
+                            <p class="text-xs text-slate-500">${clientName}</p>
+                        </td>
+                        <td class="px-6 py-4 text-sm font-semibold text-slate-700">${amount}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${s.bg} ${s.text}">
+                                ${s.label}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-xs text-slate-500 font-medium">${expiry}</td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex justify-end gap-2">
+                                ${c.status === 'pending' ? `
+                                    <button onclick="copyContractLink('${c.token}')" class="p-1.5 hover:bg-blue-50 rounded text-blue-600" title="Copiar Link">
+                                        <span class="material-symbols-outlined text-lg">link</span>
+                                    </button>
+                                    <button onclick="openCancelModal('${c.id}')" class="p-1.5 hover:bg-red-50 rounded text-red-600" title="Cancelar">
+                                        <span class="material-symbols-outlined text-lg">cancel</span>
+                                    </button>
+                                ` : ''}
+                                ${c.status === 'signed' ? `
+                                    <button onclick="downloadContractPDF('${c.id}')" class="p-1.5 hover:bg-green-50 rounded text-green-600" title="Descargar PDF">
+                                        <span class="material-symbols-outlined text-lg">picture_as_pdf</span>
+                                    </button>
+                                ` : ''}
+                                <button onclick="deleteContract('${c.id}')" class="p-1.5 hover:bg-slate-100 rounded text-slate-400 hover:text-red-600" title="Eliminar registro">
+                                    <span class="material-symbols-outlined text-lg">delete</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.openContractModal = async () => {
+            const modal = document.getElementById('contract-modal');
+            const clientSelect = document.getElementById('contract-client');
+            
+            modal.classList.remove('hidden');
+            document.getElementById('contract-expiry').value = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
+
+            // Cargar clientes
+            const { data, error } = await window.electronAPI.getClients();
+            if (data) {
+                clientSelect.innerHTML = '<option value="">Selecciona un cliente...</option>' + 
+                    data.map(cl => `<option value="${cl.id}" data-name="${cl.name}" data-email="${cl.email}">${cl.name} (${cl.email})</option>`).join('');
+            }
+        };
+
+        let isManualClient = false;
+        window.toggleNewClient = () => {
+            isManualClient = !isManualClient;
+            const selectCont = document.getElementById('client-select-container');
+            const manualCont = document.getElementById('client-manual-container');
+            const btn = document.getElementById('toggle-client-btn');
+            
+            if (isManualClient) {
+                selectCont.classList.add('hidden');
+                manualCont.classList.remove('hidden');
+                btn.innerText = 'Seleccionar de la lista';
+            } else {
+                selectCont.classList.remove('hidden');
+                manualCont.classList.add('hidden');
+                btn.innerText = 'Ingresar Manualmente';
+            }
+        };
+
+        window.closeContractModal = () => {
+            document.getElementById('contract-modal').classList.add('hidden');
+            document.getElementById('contract-form').reset();
+            document.getElementById('contract-link-result').classList.add('hidden');
+            isManualClient = false;
+            document.getElementById('client-select-container').classList.remove('hidden');
+            document.getElementById('client-manual-container').classList.add('hidden');
+            document.getElementById('toggle-client-btn').innerText = 'Ingresar Manualmente';
+        };
+
+        window.loadDefaultTemplate = () => {
+            const clientSelect = document.getElementById('contract-client');
+            const selected = clientSelect.options[clientSelect.selectedIndex];
+            
+            let clientName = isManualClient ? document.getElementById('manual-client-name').value : (selected?.dataset.name || '[Nombre del Cliente]');
+            let clientEmail = isManualClient ? document.getElementById('manual-client-email').value : (selected?.dataset.email || '[Email del Cliente]');
+            
+            const projectName = document.getElementById('contract-project').value || '[Nombre del Proyecto]';
+            const amount = parseFloat(document.getElementById('contract-amount').value) || 0;
+            
+            const now = new Date();
+            const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+            let terms = CONTRACT_TEMPLATE
+                .replace(/{{CLIENT_NAME}}/g, clientName)
+                .replace(/{{CLIENT_EMAIL}}/g, clientEmail)
+                .replace(/{{PROJECT_NAME}}/g, projectName)
+                .replace(/{{AMOUNT}}/g, amount.toLocaleString('en-US', { minimumFractionDigits: 2 }))
+                .replace(/{{AMOUNT_50}}/g, (amount * 0.5).toLocaleString('en-US', { minimumFractionDigits: 2 }))
+                .replace(/{{AMOUNT_30}}/g, (amount * 0.3).toLocaleString('en-US', { minimumFractionDigits: 2 }))
+                .replace(/{{AMOUNT_20}}/g, (amount * 0.2).toLocaleString('en-US', { minimumFractionDigits: 2 }))
+                .replace(/{{DAY}}/g, now.getDate())
+                .replace(/{{MONTH}}/g, months[now.getMonth()])
+                .replace(/{{YEAR}}/g, now.getFullYear());
+            
+            document.getElementById('contract-terms').value = terms;
+        };
+
+        // Form Submit
+        document.addEventListener('submit', async (e) => {
+            if (e.target.id === 'contract-form') {
+                e.preventDefault();
+                const btn = document.getElementById('gen-contract-btn');
+                btn.disabled = true;
+                btn.innerText = 'Generando...';
+
+                const payload = {
+                    description: document.getElementById('contract-project').value,
+                    amount: parseFloat(document.getElementById('contract-amount').value),
+                    terms: document.getElementById('contract-terms').value
+                };
+
+                if (isManualClient) {
+                    payload.client_name = document.getElementById('manual-client-name').value;
+                    payload.client_email = document.getElementById('manual-client-email').value;
+                } else {
+                    payload.client_id = document.getElementById('contract-client').value;
+                }
+
+                const { data, error } = await window.electronAPI.createContract(payload);
+                
+                btn.disabled = false;
+                btn.innerText = 'Generar y Enviar Link';
+
+                if (data) {
+                    const url = `https://payforge.azokia.com/api/storage/buckets/portal-firmas/objects/index.html?token=${data.token}`;
+                    document.getElementById('generated-contract-url').value = url;
+                    document.getElementById('contract-link-result').classList.remove('hidden');
+                    loadContracts();
+                } else {
+                    alert('Error: ' + JSON.stringify(error));
+                }
+            }
+        });
+
+        window.copyContractLink = (token) => {
+            const url = token.startsWith('http') ? token : `https://payforge.azokia.com/api/storage/buckets/portal-firmas/objects/index.html?token=${token}`;
+            navigator.clipboard.writeText(url);
+            alert('Link de contrato copiado.');
+        };
+
+        let contractToCancel = null;
+        window.openCancelModal = (id) => {
+            contractToCancel = id;
+            document.getElementById('cancel-modal').classList.remove('hidden');
+        };
+
+        window.closeCancelModal = () => {
+            document.getElementById('cancel-modal').classList.add('hidden');
+            contractToCancel = null;
+        };
+
+        document.getElementById('confirm-cancel-btn')?.addEventListener('click', async () => {
+            const reason = document.getElementById('cancel-reason').value;
+            const detail = document.getElementById('cancel-detail').value;
+            
+            const { success } = await window.electronAPI.cancelContract(contractToCancel, reason, detail);
+            if (success) {
+                closeCancelModal();
+                loadContracts();
+            }
+        });
+
+        window.deleteContract = async (id) => {
+            if (confirm('¿Eliminar registro de contrato?')) {
+                await window.electronAPI.deleteContract(id);
+                loadContracts();
+            }
+        };
+
+        window.downloadContractPDF = (id) => {
+            alert('Generando PDF... (Función en desarrollo)');
+            // Aquí llamaríamos a un handler que use jspdf o similar
+        };
 
         // --- LINKS PAGE LOGIC ---
 

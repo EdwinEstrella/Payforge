@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firma de Contrato - Payforge</title>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .signature-container {
+            border: 2px dashed #ccc;
+            background: #f9f9f9;
+            touch-action: none;
+        }
+        canvas {
+            width: 100%;
+            height: 200px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-4 md:p-8">
+    <div id="app" class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden hidden border border-slate-200">
+        <!-- Header -->
+        <div class="bg-black text-white p-6">
+            <h1 class="text-2xl font-bold">Contrato de Servicios</h1>
+            <p id="contract-id" class="text-slate-400 text-sm mt-1 uppercase tracking-widest"></p>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6 space-y-8">
+            <!-- Details -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-slate-100">
+                <div>
+                    <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Monto</label>
+                    <p id="amount" class="text-xl font-semibold text-slate-900"></p>
+                </div>
+                <div>
+                    <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Descripción</label>
+                    <p id="description" class="text-slate-700"></p>
+                </div>
+            </div>
+
+            <!-- Terms -->
+            <div>
+                <label class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 block">Términos y Condiciones</label>
+                <div id="terms" class="bg-slate-50 p-4 rounded-lg text-sm text-slate-600 max-h-[500px] overflow-y-auto border border-slate-200 whitespace-pre-wrap font-sans leading-relaxed"></div>
+            </div>
+
+            <!-- Signature Area -->
+            <div id="signature-area" class="space-y-4">
+                <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Firma Digital</label>
+                <div class="signature-container rounded-lg overflow-hidden">
+                    <canvas id="signature-pad"></canvas>
+                </div>
+                <div class="flex justify-between items-center">
+                    <button id="clear" class="text-sm text-slate-500 hover:text-red-600 transition-colors font-medium">Limpiar firma</button>
+                    <button id="submit" class="bg-black text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-95">Aceptar y Firmar Contrato</button>
+                </div>
+            </div>
+
+            <!-- Success State -->
+            <div id="success-message" class="hidden text-center py-8 space-y-6">
+                <div class="text-green-500 text-5xl">✓</div>
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Contrato Firmado Correctamente</h2>
+                    <p id="signed-at-text" class="text-slate-600 mt-2"></p>
+                </div>
+                <div class="flex justify-center gap-4">
+                    <button onclick="generatePDF()" class="inline-flex items-center gap-2 bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-black transition-all shadow-md active:scale-95">
+                        <span class="material-symbols-outlined">download</span>
+                        Descargar Contrato (PDF)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error/Loading -->
+    <div id="status" class="flex items-center justify-center min-h-[50vh] text-slate-500">
+        <div class="text-center">
+            <div id="loader" class="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+            <p id="status-text" class="font-medium">Cargando contrato legal...</p>
+            <p id="error-details" class="text-xs text-slate-400 mt-4 max-w-xs mx-auto"></p>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            BASE_URL: 'https://payforge.azokia.com',
+            ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3OC0xMjM0LTU2NzgtOTBhYi1jZGVmMTIzNDU2NzgiLCJlbWFpbCI6ImFub25AaW5zZm9yZ2UuY29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NzU5NTh9.exqlCa7utMhooqbfgRhawdwpFLQOEt0soTQzlNWN0GM'
+        };
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        const appEl = document.getElementById('app');
+        const statusEl = document.getElementById('status');
+        const statusTextEl = document.getElementById('status-text');
+        const loaderEl = document.getElementById('loader');
+        const errorDetailsEl = document.getElementById('error-details');
+
+        let signaturePad;
+
+        async function init() {
+            console.log('[Portal] Iniciando carga con token:', token);
+            
+            if (!token) {
+                showError('Token de contrato no válido o ausente.', 'Asegúrese de que el enlace sea el correcto.');
+                return;
+            }
+
+            try {
+                // CORRECCIÓN: Endpoint correcto para Insforge (/api/database/records/)
+                const url = `${CONFIG.BASE_URL}/api/database/records/contracts?token=eq.${token}&select=*,clients(name,email)`;
+                console.log('[Portal] Fetching:', url);
+
+                const response = await fetch(url, {
+                    headers: {
+                        'apikey': CONFIG.ANON_KEY,
+                        'Authorization': `Bearer ${CONFIG.ANON_KEY}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Error ${response.status}: ${errorText}`);
+                }
+
+                const data = await response.json();
+                console.log('[Portal] Data recibida:', data);
+                
+                if (!data || data.length === 0) {
+                    showError('Contrato no encontrado.', 'El enlace puede haber expirado o ser inválido.');
+                    return;
+                }
+
+                const contract = data[0];
+                renderContract(contract);
+
+                if (contract.status === 'signed') {
+                    showSignedState(contract);
+                } else if (contract.status === 'cancelled') {
+                    showError('Este contrato ha sido cancelado.', `Motivo: ${contract.cancel_reason || 'No especificado'}`);
+                }
+            } catch (err) {
+                console.error('[Portal] Error fatal:', err);
+                showError('Error de conexión con Payforge.', err.message);
+            }
+        }
+
+        function renderContract(contract) {
+            const clientName = contract.client_name || (contract.clients ? contract.clients.name : 'Cliente');
+            document.title = `Firma Contrato - ${clientName}`;
+
+            document.getElementById('contract-id').textContent = `Ref: ${contract.id.substring(0, 8).toUpperCase()}`;
+            document.getElementById('amount').textContent = `${contract.amount.toLocaleString('en-US', { style: 'currency', currency: contract.currency || 'USD' })}`;
+            document.getElementById('description').textContent = contract.description;
+            document.getElementById('terms').textContent = contract.terms;
+
+            statusEl.classList.add('hidden');
+            appEl.classList.remove('hidden');
+
+            const canvas = document.getElementById('signature-pad');
+            signaturePad = new SignaturePad(canvas, {
+                backgroundColor: 'rgba(255, 255, 255, 0)',
+                penColor: 'rgb(0, 0, 0)'
+            });
+
+            function resizeCanvas() {
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                canvas.width = canvas.offsetWidth * ratio;
+                canvas.height = canvas.offsetHeight * ratio;
+                canvas.getContext("2d").scale(ratio, ratio);
+                signaturePad.clear();
+            }
+
+            window.addEventListener("resize", resizeCanvas);
+            resizeCanvas();
+
+            document.getElementById('clear').addEventListener('click', () => signaturePad.clear());
+            document.getElementById('submit').addEventListener('click', submitSignature);
+        }
+
+        async function submitSignature() {
+            if (signaturePad.isEmpty()) {
+                alert('Por favor, firme el documento para continuar.');
+                return;
+            }
+
+            const button = document.getElementById('submit');
+            button.disabled = true;
+            button.textContent = 'Procesando...';
+
+            const signatureData = signaturePad.toDataURL();
+
+            try {
+                const url = `${CONFIG.BASE_URL}/api/database/records/contracts?token=eq.${token}`;
+                const response = await fetch(url, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': CONFIG.ANON_KEY,
+                        'Authorization': `Bearer ${CONFIG.ANON_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify({
+                        signature_data: signatureData,
+                        status: 'signed',
+                        signed_at: new Date().toISOString()
+                    })
+                });
+
+                if (response.ok) {
+                    const updatedData = await response.json();
+                    showSignedState(updatedData[0]);
+                } else {
+                    throw new Error('No se pudo guardar la firma.');
+                }
+            } catch (err) {
+                console.error('[Portal] Error al firmar:', err);
+                alert('Error al procesar la firma: ' + err.message);
+                button.disabled = false;
+                button.textContent = 'Aceptar y Firmar Contrato';
+            }
+        }
+
+        function showSignedState(contract) {
+            document.getElementById('signature-area').classList.add('hidden');
+            document.getElementById('success-message').classList.remove('hidden');
+            document.getElementById('signed-at-text').textContent = `Documento firmado electrónicamente el ${new Date(contract.signed_at).toLocaleString()}.`;
+        }
+
+        async function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const app = document.getElementById('app');
+            const termsEl = document.getElementById('terms');
+            
+            const btn = document.querySelector('button[onclick="generatePDF()"]');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.textContent = 'Generando PDF...';
+
+            const originalMaxHeight = termsEl.style.maxHeight;
+            const originalOverflow = termsEl.style.overflowY;
+            termsEl.style.maxHeight = 'none';
+            termsEl.style.overflowY = 'visible';
+
+            try {
+                const canvas = await html2canvas(app, { 
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const pdfWidth = doc.internal.pageSize.getWidth();
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                
+                doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                doc.save(`Contrato_Firmado_${token.substring(0,8).toUpperCase()}.pdf`);
+            } catch (err) {
+                console.error('[Portal] PDF Error:', err);
+                alert('Error al generar PDF: ' + err.message);
+            } finally {
+                termsEl.style.maxHeight = originalMaxHeight;
+                termsEl.style.overflowY = originalOverflow;
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        function showError(msg, detail = '') {
+            loaderEl.classList.add('hidden');
+            statusTextEl.textContent = msg;
+            statusTextEl.classList.add('text-red-500', 'font-bold');
+            errorDetailsEl.textContent = detail;
+        }
+
+        init();
+    </script>
+</body>
+</html>
