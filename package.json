@@ -25,7 +25,7 @@
         "nsis"
       ],
       "icon": "logo_blanco_negro.ico",
-      "signAndEditExecutable": false
+      "signAndEditExecutable": true
     },
     "nsis": {
       "oneClick": false,

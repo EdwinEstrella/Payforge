@@ -479,11 +479,12 @@
             const btn = document.getElementById('gen-btn');
             const resultDiv = document.getElementById('payment-result');
             
+            const intervalVal = document.getElementById('payment-interval').value;
             const payload = {
-                clientEmail: document.getElementById('modal-client-email').value,
-                clientName: document.getElementById('modal-client-name').value,
-                amount: Math.round(parseFloat(document.getElementById('payment-amount').value) * 100), // a centavos
-                interval: document.getElementById('payment-interval').value
+                description: `Pago de ${document.getElementById('modal-client-name').value || 'Servicio'}`,
+                amount: Math.round(parseFloat(document.getElementById('payment-amount').value) * 100),
+                type: intervalVal === 'once' ? 'payment' : 'subscription',
+                interval: intervalVal === 'once' ? null : intervalVal
             };
 
             btn.disabled = true;

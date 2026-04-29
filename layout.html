@@ -455,19 +455,24 @@
                 if (history.length === 0) {
                     elements.activity.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">No hay actividad reciente.</p>';
                 } else {
-                    elements.activity.innerHTML = history.slice(0, 4).map(item => {
+                    elements.activity.innerHTML = history.slice(0, 5).map(item => {
                         const timeAgo = getTimeAgo(new Date(item.created_at));
-                        const isSuccess = item.status === 'succeeded';
+                        const statusConfig = {
+                            succeeded: { bg: 'bg-emerald-100', text: 'text-emerald-600', icon: 'check_circle' },
+                            failed: { bg: 'bg-red-100', text: 'text-red-600', icon: 'error' },
+                            expired: { bg: 'bg-slate-100', text: 'text-slate-500', icon: 'schedule' },
+                            refunded: { bg: 'bg-amber-100', text: 'text-amber-600', icon: 'undo' }
+                        };
+                        const cfg = statusConfig[item.status] || statusConfig.failed;
                         return `
                             <div class="flex gap-4">
-                                <div class="w-10 h-10 rounded-full ${isSuccess ? 'bg-emerald-100' : 'bg-amber-100'} flex items-center justify-center shrink-0">
-                                    <span class="material-symbols-outlined ${isSuccess ? 'text-emerald-600' : 'text-amber-600'} text-xl">
-                                        ${isSuccess ? 'check' : 'pending'}
-                                    </span>
+                                <div class="w-10 h-10 rounded-full ${cfg.bg} flex items-center justify-center shrink-0">
+                                    <span class="material-symbols-outlined ${cfg.text} text-xl">${cfg.icon}</span>
                                 </div>
                                 <div class="flex-1">
                                     <p class="text-sm font-semibold text-slate-900 line-clamp-1">${item.description || 'Pago de servicio'}</p>
                                     <p class="text-xs text-slate-500">${timeAgo}</p>
+                                    ${item.failure_reason ? `<p class="text-[10px] text-red-500 mt-0.5 line-clamp-1">${item.failure_reason}</p>` : ''}
                                 </div>
                                 <div class="text-right">
                                     <p class="text-sm font-bold text-slate-900">${(item.amount / 100).toLocaleString('en-US', { style: 'currency', currency: item.currency.toUpperCase() })}</p>
@@ -556,18 +561,29 @@
                 });
                 const amount = (item.amount / 100).toLocaleString('en-US', { style: 'currency', currency: item.currency.toUpperCase() });
                 
+                const statusLabels = {
+                    succeeded: { label: 'Completado', bg: 'bg-green-100', text: 'text-green-700' },
+                    failed: { label: 'Fallido', bg: 'bg-red-100', text: 'text-red-700' },
+                    expired: { label: 'Expirado', bg: 'bg-slate-100', text: 'text-slate-600' },
+                    refunded: { label: 'Reembolsado', bg: 'bg-amber-100', text: 'text-amber-700' }
+                };
+                const st = statusLabels[item.status] || { label: item.status, bg: 'bg-slate-100', text: 'text-slate-600' };
+
                 return `
                     <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-50">
                         <td class="px-6 py-4 text-xs font-medium text-slate-500 uppercase">${date}</td>
                         <td class="px-6 py-4">
                             <p class="text-sm font-semibold text-slate-900">${item.description || 'Pago de servicio'}</p>
-                            <p class="text-[10px] text-slate-400 uppercase tracking-tighter">Stripe Charge: ${item.stripe_charge_id}</p>
+                            <p class="text-[10px] text-slate-400 uppercase tracking-tighter">Ref: ${item.stripe_charge_id}</p>
+                            ${item.failure_reason ? `<p class="text-[11px] text-red-500 mt-1 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[12px]">warning</span>
+                                ${item.failure_reason}
+                            </p>` : ''}
                         </td>
                         <td class="px-6 py-4 text-sm font-bold text-slate-900">${amount}</td>
                         <td class="px-6 py-4">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase 
-                                ${item.status === 'succeeded' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">
-                                ${item.status === 'succeeded' ? 'Completado' : item.status}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${st.bg} ${st.text}">
+                                ${st.label}
                             </span>
                         </td>
                         <td class="px-6 py-4 text-right text-[10px] font-mono text-slate-400">
@@ -627,21 +643,22 @@
                         </div>
                     </td>
                     <td class="px-6 py-4">
-                        ${client.status === 'active' 
-                            ? `<div class="flex flex-col gap-1">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 uppercase tracking-wider w-fit">
-                                    <span class="w-1 h-1 rounded-full bg-green-500 mr-1.5"></span>
-                                    Suscripción Activa
+                        ${(() => {
+                            const statusMap = {
+                                active: { label: 'Suscripción Activa', bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500', sub: 'Autorenovable' },
+                                past_due: { label: 'Pago Vencido', bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500', sub: 'Requiere atención' },
+                                inactive: { label: 'Inactivo', bg: 'bg-slate-100', text: 'text-slate-500', dot: 'bg-slate-400', sub: 'Sin suscripción' },
+                                incomplete: { label: 'Incompleto', bg: 'bg-amber-100', text: 'text-amber-700', dot: 'bg-amber-500', sub: 'Pago pendiente' }
+                            };
+                            const s = statusMap[client.status] || statusMap.inactive;
+                            return `<div class="flex flex-col gap-1">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${s.bg} ${s.text} uppercase tracking-wider w-fit">
+                                    <span class="w-1 h-1 rounded-full ${s.dot} mr-1.5"></span>
+                                    ${s.label}
                                 </span>
-                                <span class="text-[9px] text-slate-400 font-medium ml-1">Autorenovable</span>
-                               </div>`
-                            : `<div class="flex flex-col gap-1">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 uppercase tracking-wider w-fit">
-                                    Sin Suscripción
-                                </span>
-                                <span class="text-[9px] text-slate-400 font-medium ml-1">Pago único o pendiente</span>
-                               </div>`
-                        }
+                                <span class="text-[9px] text-slate-400 font-medium ml-1">${s.sub}</span>
+                               </div>`;
+                        })()}
                     </td>
                     <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end gap-2">
