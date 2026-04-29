@@ -1,16 +1,16 @@
 <div class="flex items-end justify-between mb-8">
     <div>
         <h1 class="font-headline-md text-headline-md text-slate-900 mb-1">Gestión de Clientes</h1>
-        <p class="font-body-md text-body-md text-slate-500">Administra y supervisa todas tus relaciones comerciales e historiales de pago.</p>
+        <p class="font-body-md text-body-md text-slate-500">Administra y supervisa todas tus relaciones comerciales e historiales de pago reales desde Stripe.</p>
     </div>
     <div class="flex gap-3">
-        <button class="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-lg transition-all border border-slate-200">
-            <span class="material-symbols-outlined text-[18px]">download</span>
-            Exportar Lista
+        <button onclick="syncStripeData()" class="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-lg transition-all border border-slate-200">
+            <span class="material-symbols-outlined text-[18px]">sync</span>
+            Sincronizar Stripe
         </button>
-        <button class="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-lg transition-all shadow-lg shadow-blue-500/20">
-            <span class="material-symbols-outlined text-[18px]">add</span>
-            Agregar Cliente
+        <button onclick="openPaymentModal('', '')" class="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-lg transition-all shadow-lg shadow-blue-500/20">
+            <span class="material-symbols-outlined text-[18px]">link</span>
+            Generar Link de Pago
         </button>
     </div>
 </div>
@@ -18,32 +18,23 @@
 <div class="grid grid-cols-12 gap-6 mb-10">
     <div class="col-span-12 md:col-span-4 bg-white border border-slate-200 rounded-xl p-6 relative overflow-hidden shadow-sm">
         <div class="absolute left-0 top-0 h-full w-[2px] bg-blue-600"></div>
-        <p class="font-label-caps text-label-caps text-slate-500 uppercase mb-2">Clientes Activos</p>
+        <p class="font-label-caps text-label-caps text-slate-500 uppercase mb-2">Clientes en Base de Datos</p>
         <div class="flex items-baseline gap-2">
-            <span class="font-display-lg text-display-lg text-slate-900">1,284</span>
-            <span class="text-green-600 text-sm font-bold flex items-center">
-                <span class="material-symbols-outlined text-[16px]">arrow_upward</span>
-                12%
-            </span>
+            <span id="stat-active-clients" class="font-display-lg text-display-lg text-slate-900">--</span>
         </div>
     </div>
     <div class="col-span-12 md:col-span-4 bg-white border border-slate-200 rounded-xl p-6 relative overflow-hidden shadow-sm">
         <div class="absolute left-0 top-0 h-full w-[2px] bg-green-500"></div>
-        <p class="font-label-caps text-label-caps text-slate-500 uppercase mb-2">LTV Promedio</p>
+        <p class="font-label-caps text-label-caps text-slate-500 uppercase mb-2">Estado del Servidor</p>
         <div class="flex items-baseline gap-2">
-            <span class="font-display-lg text-display-lg text-slate-900">$2,450</span>
-            <span class="text-slate-400 text-sm font-medium">por mes</span>
+            <span class="font-display-lg text-display-lg text-slate-900 text-green-600">Online</span>
         </div>
     </div>
     <div class="col-span-12 md:col-span-4 bg-white border border-slate-200 rounded-xl p-6 relative overflow-hidden shadow-sm">
         <div class="absolute left-0 top-0 h-full w-[2px] bg-slate-900"></div>
-        <p class="font-label-caps text-label-caps text-slate-500 uppercase mb-2">Crecimiento</p>
+        <p class="font-label-caps text-label-caps text-slate-500 uppercase mb-2">Sincronización</p>
         <div class="flex items-baseline gap-2">
-            <span class="font-display-lg text-display-lg text-slate-900">24.8%</span>
-            <span class="text-green-600 text-sm font-bold flex items-center">
-                <span class="material-symbols-outlined text-[16px]">trending_up</span>
-                Estable
-            </span>
+            <span class="font-display-lg text-display-lg text-slate-900">Al día</span>
         </div>
     </div>
 </div>
@@ -55,10 +46,6 @@
                 <span class="material-symbols-outlined text-[18px]">filter_list</span>
                 Filtros
             </div>
-            <div class="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 cursor-pointer hover:bg-slate-50 transition-colors">
-                <span class="material-symbols-outlined text-[18px]">sort</span>
-                Ordenar
-            </div>
         </div>
     </div>
     <div class="overflow-x-auto">
@@ -66,27 +53,82 @@
             <thead>
                 <tr class="bg-white border-b border-slate-100">
                     <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs">Nombre del Cliente</th>
-                    <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs text-right">Total Gastado</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs text-right">Email</th>
                     <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs">Estado</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs text-right">Acciones</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-50">
-                <tr class="hover:bg-slate-50/80 transition-colors group">
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">AM</div>
-                            <div>
-                                <p class="font-headline-sm text-sm text-slate-900 mb-0.5">Alex Morgan</p>
-                                <p class="text-xs text-slate-400">Acme Corp</p>
-                            </div>
+            <tbody id="clients-table-body" class="divide-y divide-slate-50">
+                <tr>
+                    <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                        <div class="flex flex-col items-center gap-2">
+                            <span class="material-symbols-outlined animate-spin">refresh</span>
+                            Cargando datos reales...
                         </div>
-                    </td>
-                    <td class="px-6 py-4 text-sm text-slate-900 text-right font-medium">$12,450.00</td>
-                    <td class="px-6 py-4">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">Activo</span>
                     </td>
                 </tr>
             </tbody>
         </table>
+    </div>
+</div>
+
+<!-- Modal Generar Pago (Oculto por defecto) -->
+<div id="payment-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center hidden">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 border border-slate-200">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="font-headline-sm text-lg text-slate-900">Generar Link de Pago</h3>
+            <button onclick="closePaymentModal()" class="text-slate-400 hover:text-slate-600">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        
+        <form id="payment-form" class="space-y-4">
+            <div id="client-info-group" class="p-3 bg-slate-50 rounded-lg border border-slate-100 mb-4 hidden">
+                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Cobrando a:</p>
+                <p id="display-client-name" class="text-sm font-bold text-slate-900"></p>
+                <p id="display-client-email" class="text-xs text-slate-500"></p>
+                <input type="hidden" id="modal-client-name">
+                <input type="hidden" id="modal-client-email">
+            </div>
+
+            <div id="manual-client-group">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre / Concepto</label>
+                    <input type="text" id="manual-client-name" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" placeholder="Ej: Servicio Premium">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tipo de Cobro</label>
+                <select id="payment-type" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
+                    <option value="subscription">Suscripción Recurrente</option>
+                    <option value="payment">Pago Único (Neto)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Monto (en USD)</label>
+                <div class="relative">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                    <input type="number" id="payment-amount" step="0.01" class="w-full pl-8 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" placeholder="29.99" required>
+                </div>
+            </div>
+
+            <div id="interval-group">
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Frecuencia</label>
+                <select id="payment-interval" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
+                    <option value="month">Mensual</option>
+                    <option value="year">Anual</option>
+                </select>
+            </div>
+            <div id="payment-result" class="hidden p-3 bg-slate-50 rounded-lg border border-slate-200 break-all text-xs text-blue-600 font-mono">
+                <!-- Link generado aquí -->
+            </div>
+
+            <button type="submit" id="gen-btn" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-lg shadow-blue-500/20 transition-all active:scale-95 flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">link</span>
+                Crear Link de Pago
+            </button>
+        </form>
     </div>
 </div>

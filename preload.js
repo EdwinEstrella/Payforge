@@ -29,5 +29,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     if (handlers.onUpdateDownloaded) ipcRenderer.on('update-downloaded', onDownloaded)
     if (handlers.onUpdateError) ipcRenderer.on('update-error', onError)
   },
-  installUpdate: () => ipcRenderer.send('install-update')
+  installUpdate: () => ipcRenderer.send('install-update'),
+
+  // DB & Stripe Logic
+  getClients: async () => ipcRenderer.invoke('db-get-clients'),
+  getHistory: async () => ipcRenderer.invoke('db-get-history'),
+  createPaymentLink: async (data) => ipcRenderer.invoke('stripe-create-link', data),
+  syncStripeCustomers: async () => ipcRenderer.invoke('stripe-sync-customers')
 })

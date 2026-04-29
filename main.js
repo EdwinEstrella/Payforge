@@ -1,3 +1,4 @@
+require('dotenv').config()
 const { app, BrowserWindow, ipcMain } = require('electron/main')
 const path = require('node:path')
 const { autoUpdater } = require('electron-updater')
@@ -7,9 +8,9 @@ const log = require('electron-log')
 log.transports.file.level = "info"
 autoUpdater.logger = log
 
-// Configuración de Insforge
-const INSFORGE_URL = 'https://payforge.azokia.com'
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3OC0xMjM0LTU2NzgtOTBhYi1jZGVmMTIzNDU2NzgiLCJlbWFpbCI6ImFub25AaW5zZm9yZ2UuY29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MDAzOTl9.qFBw69Ih3UhdYWuEjzMDXuV8ElpzFRUc6Oi88sH7B90'
+// Configuración de Insforge desde variables de entorno
+const INSFORGE_URL = process.env.INSFORGE_BASE_URL
+const ANON_KEY = process.env.INSFORGE_ANON_KEY
 
 let mainWindow = null
 
@@ -102,6 +103,82 @@ ipcMain.handle('get-app-version', () => app.getVersion())
 
 ipcMain.on('install-update', () => {
   autoUpdater.quitAndInstall(false, true)
+})
+
+// --- DB & STRIPE HANDLERS ---
+
+// Obtener lista de clientes desde Insforge
+ipcMain.handle('db-get-clients', async () => {
+  try {
+    const response = await fetch(`${INSFORGE_URL}/api/database/records/clients?select=*&order=name.asc`, {
+      headers: {
+        'Authorization': `Bearer ${ANON_KEY}`,
+        'apikey': ANON_KEY
+      }
+    })
+    const data = await response.json()
+    return { data, error: response.ok ? null : data }
+  } catch (error) {
+    return { data: null, error: error.message }
+  }
+})
+
+// Llamar a la función de sincronización inicial
+ipcMain.handle('stripe-sync-customers', async () => {
+  try {
+    console.log('Llamando a sync-customers-handler-new2...');
+    const response = await fetch(`${INSFORGE_URL}/functions/sync-customers-handler-new2`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${ANON_KEY}`,
+        'apikey': ANON_KEY
+      }
+    })
+    const data = await response.json()
+    console.log('Respuesta sync:', data);
+    return { data, error: response.ok ? null : data }
+  } catch (error) {
+    console.error('Error en sync:', error);
+    return { data: null, error: error.message }
+  }
+})
+
+// Generar link de pago dinámico
+ipcMain.handle('stripe-create-link', async (event, payload) => {
+  try {
+    console.log('Generando link de pago con payload:', payload);
+    const response = await fetch(`${INSFORGE_URL}/functions/create-payment-link-handler`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ANON_KEY}`,
+        'apikey': ANON_KEY
+      },
+      body: JSON.stringify(payload)
+    })
+    const data = await response.json()
+    console.log('Respuesta generación link:', data);
+    return { data, error: response.ok ? null : data }
+  } catch (error) {
+    console.error('Error generando link:', error);
+    return { data: null, error: error.message }
+  }
+})
+
+// Obtener historial de pagos desde Insforge
+ipcMain.handle('db-get-history', async () => {
+  try {
+    const response = await fetch(`${INSFORGE_URL}/api/database/records/payment_history?select=*&order=created_at.desc`, {
+      headers: {
+        'Authorization': `Bearer ${ANON_KEY}`,
+        'apikey': ANON_KEY
+      }
+    })
+    const data = await response.json()
+    return { data, error: response.ok ? null : data }
+  } catch (error) {
+    return { data: null, error: error.message }
+  }
 })
 
 // Aplicación lista

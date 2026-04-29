@@ -320,13 +320,239 @@
                     }
                 });
 
-                // Re-initialize page-specific scripts if any
-                if (pageName === 'dashboard') {
-                    // Dashboard specific logic can go here
+                // Trigger page-specific logic
+                if (pageName === 'clients') {
+                    loadClients();
+                    setupPaymentForm();
+                } else if (pageName === 'history') {
+                    loadHistory();
                 }
             } catch (error) {
                 console.error('Error loading page:', error);
                 mainContent.innerHTML = '<h2>Error al cargar la página</h2>';
+            }
+        }
+
+        // --- HISTORY PAGE LOGIC ---
+
+        async function loadHistory() {
+            const tbody = document.getElementById('history-table-body');
+            if (!tbody) return;
+
+            const { data, error } = await window.electronAPI.getHistory();
+
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-red-500">Error: ${error.message || error}</td></tr>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">No hay registros de pago todavía.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map(item => {
+                const date = new Date(item.created_at).toLocaleDateString('es-ES', {
+                    day: '2-digit', month: 'short', year: 'numeric'
+                });
+                const amount = (item.amount / 100).toLocaleString('en-US', { style: 'currency', currency: item.currency.toUpperCase() });
+                
+                return `
+                    <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-50">
+                        <td class="px-6 py-4 text-xs font-medium text-slate-500 uppercase">${date}</td>
+                        <td class="px-6 py-4">
+                            <p class="text-sm font-semibold text-slate-900">${item.description || 'Pago de servicio'}</p>
+                            <p class="text-[10px] text-slate-400 uppercase tracking-tighter">Stripe Charge: ${item.stripe_charge_id}</p>
+                        </td>
+                        <td class="px-6 py-4 text-sm font-bold text-slate-900">${amount}</td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase 
+                                ${item.status === 'succeeded' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">
+                                ${item.status === 'succeeded' ? 'Completado' : item.status}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right text-[10px] font-mono text-slate-400">
+                            #${item.stripe_charge_id.slice(-8).toUpperCase()}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // --- CLIENTS PAGE LOGIC ---
+
+        async function loadClients() {
+            const tbody = document.getElementById('clients-table-body');
+            const statActive = document.getElementById('stat-active-clients');
+            if (!tbody) return;
+
+            const { data, error } = await window.electronAPI.getClients();
+
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-red-500">Error: ${error.message || error}</td></tr>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-12 text-center text-slate-400 font-medium">No hay clientes en la base de datos.<br><span class="text-xs font-normal">Sincronizá con Stripe para empezar.</span></td></tr>`;
+                if (statActive) statActive.innerText = '0';
+                return;
+            }
+
+            if (statActive) statActive.innerText = data.length;
+            
+            tbody.innerHTML = data.map(client => `
+                <tr class="hover:bg-slate-50/80 transition-colors group border-b border-slate-50">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
+                                ${client.name ? client.name.substring(0, 2).toUpperCase() : '??'}
+                            </div>
+                            <div>
+                                <p class="font-headline-sm text-sm text-slate-900 mb-0.5">${client.name || 'Sin nombre'}</p>
+                                <p class="text-[10px] text-slate-400 font-mono">${client.stripe_customer_id || 'ID pendiente'}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-slate-600 text-right">
+                        <div class="flex flex-col items-end">
+                            <span class="font-mono text-xs">${client.email}</span>
+                            <span class="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[12px]">credit_card</span>
+                                ${client.payment_method || 'Sin método'}
+                            </span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        ${client.status === 'active' 
+                            ? `<div class="flex flex-col gap-1">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 uppercase tracking-wider w-fit">
+                                    <span class="w-1 h-1 rounded-full bg-green-500 mr-1.5"></span>
+                                    Suscripción Activa
+                                </span>
+                                <span class="text-[9px] text-slate-400 font-medium ml-1">Autorenovable</span>
+                               </div>`
+                            : `<div class="flex flex-col gap-1">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 uppercase tracking-wider w-fit">
+                                    Sin Suscripción
+                                </span>
+                                <span class="text-[9px] text-slate-400 font-medium ml-1">Pago único o pendiente</span>
+                               </div>`
+                        }
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            <div class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 rounded text-[9px] font-bold border border-green-100">
+                                <span class="w-1 h-1 rounded-full bg-green-500 animate-pulse"></span>
+                                SYNC
+                            </div>
+                            <button onclick="openPaymentModal('${client.email}', '${client.name || ''}')" 
+                                    class="px-3 py-1.5 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 shadow-sm">
+                                <span class="material-symbols-outlined text-[14px]">payments</span>
+                                Cobrar
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function setupPaymentForm() {
+            const form = document.getElementById('payment-form');
+            const typeSelect = document.getElementById('payment-type');
+            const intervalGroup = document.getElementById('interval-group');
+            if (!form) return;
+
+            typeSelect.onchange = () => {
+                intervalGroup.style.display = typeSelect.value === 'subscription' ? 'block' : 'none';
+            };
+
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('gen-btn');
+                const resultDiv = document.getElementById('payment-result');
+                
+                // Si hay cliente específico usamos sus datos, sino los manuales
+                const email = document.getElementById('modal-client-email').value;
+                const name = email ? document.getElementById('modal-client-name').value : document.getElementById('manual-client-name').value;
+
+                const payload = {
+                    clientEmail: email || null,
+                    clientName: name || 'Cliente Payforge',
+                    amount: Math.round(parseFloat(document.getElementById('payment-amount').value) * 100),
+                    type: typeSelect.value,
+                    interval: typeSelect.value === 'subscription' ? document.getElementById('payment-interval').value : null
+                };
+
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-symbols-outlined animate-spin">refresh</span> Generando...';
+
+                const { data, error } = await window.electronAPI.createPaymentLink(payload);
+
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">link</span> Crear Link de Pago';
+
+                if (error) {
+                    alert('Error: ' + (error.error || 'No se pudo generar el link'));
+                    return;
+                }
+
+                resultDiv.innerHTML = `Link de Stripe (copialo y mandalo):<br><a href="${data.url}" target="_blank" class="text-blue-600 underline break-all">${data.url}</a>`;
+                resultDiv.classList.remove('hidden');
+            };
+        }
+
+        window.openPaymentModal = (email, name) => {
+            const modal = document.getElementById('payment-modal');
+            const infoGroup = document.getElementById('client-info-group');
+            const manualGroup = document.getElementById('manual-client-group');
+            
+            document.getElementById('modal-client-email').value = email;
+            document.getElementById('modal-client-name').value = name;
+            
+            if (email) {
+                infoGroup.classList.remove('hidden');
+                manualGroup.classList.add('hidden');
+                document.getElementById('display-client-name').innerText = name || 'Sin nombre';
+                document.getElementById('display-client-email').innerText = email;
+            } else {
+                infoGroup.classList.add('hidden');
+                manualGroup.classList.remove('hidden');
+                document.getElementById('manual-client-name').value = '';
+            }
+
+            modal.classList.remove('hidden');
+            document.getElementById('payment-result').classList.add('hidden');
+        }
+
+        window.closePaymentModal = () => {
+            document.getElementById('payment-modal').classList.add('hidden');
+            document.getElementById('payment-form').reset();
+        }
+
+        window.openPaymentModalFromDashboard = async () => {
+            await loadPage('clients');
+            openPaymentModal('', '');
+        }
+
+        window.syncStripeData = async () => {
+            if (!confirm('¿Quieres sincronizar los clientes desde Stripe?')) return;
+            const btn = document.querySelector('button[onclick="syncStripeData()"]');
+            const originalText = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin">refresh</span> Sincronizando...';
+            
+            const { data, error } = await window.electronAPI.syncStripeCustomers();
+            
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            
+            if (error) {
+                alert('Error al sincronizar: ' + (error.message || error));
+            } else {
+                alert('Sincronización completada con éxito.');
+                loadClients();
             }
         }
 

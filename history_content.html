@@ -1,91 +1,38 @@
-<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+<div class="flex items-end justify-between mb-8">
     <div>
         <h1 class="font-headline-md text-headline-md text-slate-900 mb-1">Historial de Pagos</h1>
-        <p class="font-body-md text-body-md text-slate-500">Administra y audita los registros transaccionales de tu organización.</p>
+        <p class="font-body-md text-body-md text-slate-500">Registro cronológico de todas las transacciones reales procesadas vía Stripe.</p>
     </div>
-    <div class="flex items-center gap-3">
-        <button class="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg font-body-md text-slate-700 bg-white hover:bg-slate-50 transition-all shadow-sm">
-            <span class="material-symbols-outlined text-[20px]">file_download</span>
-            Exportar CSV
-        </button>
-        <button class="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg font-body-md text-slate-700 bg-white hover:bg-slate-50 transition-all shadow-sm">
-            <span class="material-symbols-outlined text-[20px]">print</span>
-            Imprimir
+    <div class="flex gap-3">
+        <button class="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-lg transition-all border border-slate-200">
+            <span class="material-symbols-outlined text-[18px]">download</span>
+            Descargar Reporte
         </button>
     </div>
 </div>
 
-<div class="bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm flex flex-wrap items-center gap-4">
-    <div class="flex-1 min-w-[200px]">
-        <label class="block font-label-caps text-label-caps text-slate-400 mb-1.5 ml-1">ESTADO</label>
-        <select class="w-full pl-3 pr-10 py-2 border border-slate-200 rounded-lg appearance-none font-body-md bg-white">
-            <option>Todos los estados</option>
-            <option>Exitoso</option>
-            <option>Pendiente</option>
-            <option>Fallido</option>
-        </select>
-    </div>
-    <div class="flex-1 min-w-[200px]">
-        <label class="block font-label-caps text-label-caps text-slate-400 mb-1.5 ml-1">RANGO DE FECHAS</label>
-        <input class="w-full px-3 py-2 border border-slate-200 rounded-lg font-body-md" type="date"/>
-    </div>
-    <div class="pt-5">
-        <button class="px-6 py-2 bg-slate-900 text-white rounded-lg font-body-md hover:bg-slate-800 transition-all">
-            Aplicar Filtros
-        </button>
-    </div>
-</div>
-
-<div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-    <table class="w-full text-left border-collapse">
-        <thead class="bg-slate-50 border-b border-slate-100">
-            <tr>
-                <th class="px-6 py-4 font-label-caps text-label-caps text-slate-500">ID TRANSACCIÓN</th>
-                <th class="px-6 py-4 font-label-caps text-label-caps text-slate-500">FECHA</th>
-                <th class="px-6 py-4 font-label-caps text-label-caps text-slate-500">CLIENTE</th>
-                <th class="px-6 py-4 font-label-caps text-label-caps text-slate-500 text-right">MONTO</th>
-                <th class="px-6 py-4 font-label-caps text-label-caps text-slate-500">ESTADO</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-50">
-            <tr class="hover:bg-slate-50/50 transition-colors">
-                <td class="px-6 py-4 text-slate-900 font-medium">#TRX-82910</td>
-                <td class="px-6 py-4 text-slate-600">Oct 24, 2023, 09:42</td>
-                <td class="px-6 py-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600">AM</div>
-                        <span class="text-slate-900">Acme Marketing Ltd.</span>
-                    </div>
-                </td>
-                <td class="px-6 py-4 text-slate-900 text-right font-medium">$4,500.00</td>
-                <td class="px-6 py-4">
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-100">
-                        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                        Exitoso
-                    </span>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-
-<div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
-        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
-        <p class="font-label-caps text-label-caps text-slate-400">VOLUMEN TOTAL</p>
-        <h3 class="font-display-lg text-display-lg text-slate-900 mb-1">$452,190.20</h3>
-        <p class="text-green-600 text-sm font-medium">+12.5% vs mes anterior</p>
-    </div>
-    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
-        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-green-500"></div>
-        <p class="font-label-caps text-label-caps text-slate-400">TASA DE ÉXITO</p>
-        <h3 class="font-display-lg text-display-lg text-slate-900 mb-1">98.4%</h3>
-        <p class="text-slate-500 text-sm">Estable en todas las regiones</p>
-    </div>
-    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
-        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500"></div>
-        <p class="font-label-caps text-label-caps text-slate-400">TRANSACCIÓN PROMEDIO</p>
-        <h3 class="font-display-lg text-display-lg text-slate-900 mb-1">$1,240.00</h3>
-        <p class="text-slate-500 text-sm">+$120.00 vs promedio</p>
+<div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-white border-b border-slate-100">
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs">Fecha</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs">Concepto / Cliente</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs">Monto</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs">Estado</th>
+                    <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs text-right">Referencia</th>
+                </tr>
+            </thead>
+            <tbody id="history-table-body" class="divide-y divide-slate-50">
+                <tr>
+                    <td colspan="5" class="px-6 py-12 text-center text-slate-400">
+                        <div class="flex flex-col items-center gap-2">
+                            <span class="material-symbols-outlined animate-spin">refresh</span>
+                            Cargando historial real...
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </div>
