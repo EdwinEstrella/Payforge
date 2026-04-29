@@ -1,6 +1,6 @@
-require('dotenv').config()
-const { app, BrowserWindow, ipcMain } = require('electron/main')
 const path = require('node:path')
+require('dotenv').config({ path: path.join(__dirname, '.env') })
+const { app, BrowserWindow, ipcMain } = require('electron/main')
 const { autoUpdater } = require('electron-updater')
 const log = require('electron-log')
 

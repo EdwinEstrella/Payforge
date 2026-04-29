@@ -13,6 +13,7 @@
     },
     "files": [
       "**/*",
+      ".env",
       "!.git/**/*",
       "!Diseño plantilla/**/*",
       "!.gemini/**/*",

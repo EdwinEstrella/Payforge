@@ -336,15 +336,19 @@
         // --- HISTORY PAGE LOGIC ---
 
         async function loadHistory() {
+            console.log('[History] Iniciando carga de historial...');
             const tbody = document.getElementById('history-table-body');
             if (!tbody) return;
 
             const { data, error } = await window.electronAPI.getHistory();
 
             if (error) {
+                console.error('[History] Error al obtener datos:', error);
                 tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-red-500">Error: ${error.message || error}</td></tr>`;
                 return;
             }
+
+            console.log(`[History] Se obtuvieron ${data ? data.length : 0} registros.`);
 
             if (!data || data.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">No hay registros de pago todavía.</td></tr>`;
@@ -382,6 +386,7 @@
         // --- CLIENTS PAGE LOGIC ---
 
         async function loadClients() {
+            console.log('[Clients] Iniciando carga de clientes...');
             const tbody = document.getElementById('clients-table-body');
             const statActive = document.getElementById('stat-active-clients');
             if (!tbody) return;
@@ -389,9 +394,12 @@
             const { data, error } = await window.electronAPI.getClients();
 
             if (error) {
+                console.error('[Clients] Error al obtener datos:', error);
                 tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-red-500">Error: ${error.message || error}</td></tr>`;
                 return;
             }
+
+            console.log(`[Clients] Se obtuvieron ${data ? data.length : 0} clientes.`);
 
             if (!data || data.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-12 text-center text-slate-400 font-medium">No hay clientes en la base de datos.<br><span class="text-xs font-normal">Sincronizá con Stripe para empezar.</span></td></tr>`;
@@ -472,17 +480,14 @@
                 const btn = document.getElementById('gen-btn');
                 const resultDiv = document.getElementById('payment-result');
                 
-                // Si hay cliente específico usamos sus datos, sino los manuales
-                const email = document.getElementById('modal-client-email').value;
-                const name = email ? document.getElementById('modal-client-name').value : document.getElementById('manual-client-name').value;
-
                 const payload = {
-                    clientEmail: email || null,
-                    clientName: name || 'Cliente Payforge',
+                    description: document.getElementById('payment-description').value,
                     amount: Math.round(parseFloat(document.getElementById('payment-amount').value) * 100),
                     type: typeSelect.value,
                     interval: typeSelect.value === 'subscription' ? document.getElementById('payment-interval').value : null
                 };
+
+                console.log('[Stripe] Generando link simplificado con payload:', payload);
 
                 btn.disabled = true;
                 btn.innerHTML = '<span class="material-symbols-outlined animate-spin">refresh</span> Generando...';
@@ -493,32 +498,26 @@
                 btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">link</span> Crear Link de Pago';
 
                 if (error) {
-                    alert('Error: ' + (error.error || 'No se pudo generar el link'));
+                    console.error('[Stripe] Error en respuesta:', error);
+                    alert('Error: ' + (error.error || error.message || 'No se pudo generar el link'));
                     return;
                 }
 
+                console.log('[Stripe] Link generado exitosamente:', data.url);
                 resultDiv.innerHTML = `Link de Stripe (copialo y mandalo):<br><a href="${data.url}" target="_blank" class="text-blue-600 underline break-all">${data.url}</a>`;
                 resultDiv.classList.remove('hidden');
             };
         }
 
         window.openPaymentModal = (email, name) => {
+            console.log(`[UI] Abriendo modal simplificado`);
             const modal = document.getElementById('payment-modal');
-            const infoGroup = document.getElementById('client-info-group');
-            const manualGroup = document.getElementById('manual-client-group');
             
-            document.getElementById('modal-client-email').value = email;
-            document.getElementById('modal-client-name').value = name;
-            
-            if (email) {
-                infoGroup.classList.remove('hidden');
-                manualGroup.classList.add('hidden');
-                document.getElementById('display-client-name').innerText = name || 'Sin nombre';
-                document.getElementById('display-client-email').innerText = email;
+            // Si venimos de un cliente específico, pre-cargamos el concepto
+            if (name) {
+                document.getElementById('payment-description').value = `Pago de ${name}`;
             } else {
-                infoGroup.classList.add('hidden');
-                manualGroup.classList.remove('hidden');
-                document.getElementById('manual-client-name').value = '';
+                document.getElementById('payment-description').value = '';
             }
 
             modal.classList.remove('hidden');
@@ -526,18 +525,22 @@
         }
 
         window.closePaymentModal = () => {
+            console.log('[UI] Cerrando modal de pago.');
             document.getElementById('payment-modal').classList.add('hidden');
             document.getElementById('payment-form').reset();
         }
 
         window.openPaymentModalFromDashboard = async () => {
+            console.log('[Dashboard] Botón generar link clickeado.');
             await loadPage('clients');
             openPaymentModal('', '');
         }
 
         window.syncStripeData = async () => {
             if (!confirm('¿Quieres sincronizar los clientes desde Stripe?')) return;
+            console.log('[Sync] Iniciando sincronización manual...');
             const btn = document.querySelector('button[onclick="syncStripeData()"]');
+            if (!btn) return;
             const originalText = btn.innerHTML;
             
             btn.disabled = true;
@@ -549,8 +552,10 @@
             btn.innerHTML = originalText;
             
             if (error) {
+                console.error('[Sync] Error:', error);
                 alert('Error al sincronizar: ' + (error.message || error));
             } else {
+                console.log('[Sync] Éxito:', data);
                 alert('Sincronización completada con éxito.');
                 loadClients();
             }

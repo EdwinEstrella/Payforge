@@ -1,18 +1,22 @@
-/**
- * Initial Sync: Import existing Stripe customers to Insforge
- */
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const { createClient } = require('@insforge/sdk');
+import Stripe from 'npm:stripe';
+import { createClient } from 'npm:@insforge/sdk';
 
-const insforge = createClient({
-  baseUrl: process.env.INSFORGE_BASE_URL,
-  anonKey: process.env.INSFORGE_SERVICE_ROLE_KEY
-});
+export default async function(request) {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey',
+  };
 
-module.exports = async function(request) {
-  if (request.method !== 'POST') {
-    return new Response('Method Not Allowed', { status: 405 });
+  if (request.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
   }
+
+  const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
+  const insforge = createClient({
+    baseUrl: Deno.env.get('INSFORGE_BASE_URL'),
+    anonKey: Deno.env.get('INSFORGE_SERVICE_ROLE_KEY')
+  });
 
   try {
     const customers = await stripe.customers.list({ limit: 100 });
@@ -21,9 +25,9 @@ module.exports = async function(request) {
     for (const customer of customers.data) {
       const { data, error } = await insforge.from('clients').upsert({
         email: customer.email,
-        name: customer.name || customer.description,
+        name: customer.name || customer.description || 'Sin nombre',
         stripe_customer_id: customer.id,
-        status: 'inactive', // Se actualizará al recibir un webhook de suscripción activa
+        status: 'inactive',
         updated_at: new Date().toISOString()
       }, { onConflict: 'email' }).select().single();
 
@@ -35,9 +39,12 @@ module.exports = async function(request) {
       results: importResults 
     }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: err.message }), { 
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
-};
+}
