@@ -67,10 +67,19 @@
         <form id="proposal-form" class="flex-1 overflow-y-auto p-8 space-y-8">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Cliente</label>
-                    <select id="proposal-client" class="w-full rounded-xl border-slate-200 text-sm focus:ring-black focus:border-black">
-                        <option value="">Selecciona un cliente...</option>
-                    </select>
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Cliente</label>
+                        <button type="button" onclick="toggleProposalNewClient()" id="toggle-proposal-client-btn" class="text-[10px] bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-bold hover:bg-slate-200">Manual</button>
+                    </div>
+                    <div id="proposal-client-select-container">
+                        <select id="proposal-client" class="w-full rounded-xl border-slate-200 text-sm focus:ring-black focus:border-black">
+                            <option value="">Selecciona un cliente...</option>
+                        </select>
+                    </div>
+                    <div id="proposal-client-manual-container" class="hidden space-y-2">
+                        <input type="text" id="proposal-manual-client-name" placeholder="Nombre completo" class="w-full rounded-lg border-slate-200 text-sm">
+                        <input type="email" id="proposal-manual-client-email" placeholder="Email" class="w-full rounded-lg border-slate-200 text-sm">
+                    </div>
                 </div>
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Nombre del Proyecto</label>

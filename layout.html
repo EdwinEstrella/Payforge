@@ -664,8 +664,9 @@ En fecha {{DATE_FULL}}, las partes aceptan los términos aquí descritos mediant
                 availableProposalsForContract = proposals;
                 let optionsHTML = '<option value="">Ninguna...</option>';
                 proposals.forEach(p => {
-                    const clientName = p.clients?.name ? ` - ${p.clients.name}` : '';
-                    optionsHTML += `<option value="${p.id}">${escapeHtml(p.project_name)}${escapeHtml(clientName)}</option>`;
+                    const clientName = p.client_name || p.clients?.name;
+                    const clientLabel = clientName ? ` - ${clientName}` : '';
+                    optionsHTML += `<option value="${p.id}">${escapeHtml(p.project_name)}${escapeHtml(clientLabel)}</option>`;
                 });
                 proposalSelect.innerHTML = optionsHTML;
                 proposalSelect.onchange = () => {
@@ -676,7 +677,20 @@ En fecha {{DATE_FULL}}, las partes aceptan los términos aquí descritos mediant
                     if (selectedProposal.project_name && !projectInput.value) {
                         projectInput.value = selectedProposal.project_name;
                     }
-                    if (selectedProposal.client_id) clientSelect.value = selectedProposal.client_id;
+                    if (selectedProposal.client_id) {
+                        isManualClient = false;
+                        document.getElementById('client-select-container').classList.remove('hidden');
+                        document.getElementById('client-manual-container').classList.add('hidden');
+                        document.getElementById('toggle-client-btn').innerText = 'Manual';
+                        clientSelect.value = selectedProposal.client_id;
+                    } else if (selectedProposal.client_name || selectedProposal.client_email) {
+                        isManualClient = true;
+                        document.getElementById('client-select-container').classList.add('hidden');
+                        document.getElementById('client-manual-container').classList.remove('hidden');
+                        document.getElementById('toggle-client-btn').innerText = 'Lista';
+                        document.getElementById('manual-client-name').value = selectedProposal.client_name || '';
+                        document.getElementById('manual-client-email').value = selectedProposal.client_email || '';
+                    }
                     if (selectedProposal.amount) document.getElementById('contract-amount').value = selectedProposal.amount;
                     if (selectedProposal.payment_scheme) document.getElementById('payment-scheme').value = selectedProposal.payment_scheme;
                     if (selectedProposal.recurring_amount) document.getElementById('recurring-amount').value = selectedProposal.recurring_amount;
@@ -991,6 +1005,11 @@ En fecha {{DATE_FULL}}, las partes aceptan los términos aquí descritos mediant
             const stacks = getSelectedProposalStacks();
             const projectName = document.getElementById('proposal-project-name')?.value.trim() || 'Proyecto sin nombre';
             const projectType = document.getElementById('proposal-type')?.value || 'Proyecto';
+            const clientSelect = document.getElementById('proposal-client');
+            const selectedClient = clientSelect?.options[clientSelect.selectedIndex];
+            const clientName = isManualProposalClient
+                ? (document.getElementById('proposal-manual-client-name')?.value.trim() || 'Cliente nuevo')
+                : (selectedClient?.textContent || 'Cliente sin asignar');
             const amount = parseFloat(document.getElementById('proposal-amount')?.value) || 0;
             const paymentScheme = document.getElementById('proposal-payment-scheme')?.value || '50-50';
             const recurring = parseFloat(document.getElementById('proposal-recurring-amount')?.value) || 0;
@@ -1001,6 +1020,7 @@ En fecha {{DATE_FULL}}, las partes aceptan los términos aquí descritos mediant
             const logoText = document.getElementById('proposal-logo')?.checked ? 'Si incluye logo.' : 'No incluye logo.';
 
             return `Propuesta: ${projectName}
+Cliente: ${clientName}
 Tipo de proyecto: ${projectType}
 
 Stack propuesto:
@@ -1025,6 +1045,26 @@ Identidad visual:
             if (preview) preview.value = buildProposalText();
         }
 
+        let isManualProposalClient = false;
+
+        window.toggleProposalNewClient = () => {
+            isManualProposalClient = !isManualProposalClient;
+            const selectCont = document.getElementById('proposal-client-select-container');
+            const manualCont = document.getElementById('proposal-client-manual-container');
+            const btn = document.getElementById('toggle-proposal-client-btn');
+
+            if (isManualProposalClient) {
+                selectCont.classList.add('hidden');
+                manualCont.classList.remove('hidden');
+                btn.innerText = 'Lista';
+            } else {
+                selectCont.classList.remove('hidden');
+                manualCont.classList.add('hidden');
+                btn.innerText = 'Manual';
+            }
+            refreshProposalPreview();
+        };
+
         async function loadProposals() {
             console.log('[Proposals] Cargando listado...');
             const tbody = document.getElementById('proposals-table-body');
@@ -1048,7 +1088,7 @@ Identidad visual:
             }
 
             tbody.innerHTML = proposals.map(p => {
-                const clientName = p.clients?.name || 'Cliente sin asignar';
+                const clientName = p.client_name || p.clients?.name || 'Cliente sin asignar';
                 const projectName = p.project_name || 'Proyecto sin nombre';
                 const technologies = [
                     ...(Array.isArray(p.languages) ? p.languages : []),
@@ -1105,6 +1145,10 @@ Identidad visual:
             const clientSelect = document.getElementById('proposal-client');
             modal.classList.remove('hidden');
             renderProposalStackOptions();
+            isManualProposalClient = false;
+            document.getElementById('proposal-client-select-container').classList.remove('hidden');
+            document.getElementById('proposal-client-manual-container').classList.add('hidden');
+            document.getElementById('toggle-proposal-client-btn').innerText = 'Manual';
 
             const { data } = await window.electronAPI.getClients();
             if (data) {
@@ -1130,6 +1174,10 @@ Identidad visual:
         window.closeProposalModal = () => {
             document.getElementById('proposal-modal').classList.add('hidden');
             document.getElementById('proposal-form').reset();
+            isManualProposalClient = false;
+            document.getElementById('proposal-client-select-container').classList.remove('hidden');
+            document.getElementById('proposal-client-manual-container').classList.add('hidden');
+            document.getElementById('toggle-proposal-client-btn').innerText = 'Manual';
             document.querySelectorAll('.proposal-stack-checkbox').forEach(input => {
                 input.checked = false;
             });
@@ -1146,9 +1194,13 @@ Identidad visual:
 
             const stacks = getSelectedProposalStacks();
             const paymentScheme = document.getElementById('proposal-payment-scheme').value;
+            const manualClientName = document.getElementById('proposal-manual-client-name').value.trim();
+            const manualClientEmail = document.getElementById('proposal-manual-client-email').value.trim();
 
             const payload = {
-                client_id: document.getElementById('proposal-client').value || null,
+                client_id: isManualProposalClient ? null : (document.getElementById('proposal-client').value || null),
+                client_name: isManualProposalClient ? manualClientName : null,
+                client_email: isManualProposalClient ? manualClientEmail : null,
                 project_name: document.getElementById('proposal-project-name').value.trim(),
                 project_type: document.getElementById('proposal-type').value,
                 languages: stacks.languages,
