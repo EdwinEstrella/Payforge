@@ -195,13 +195,13 @@ ipcMain.handle('stripe-create-link', async (event, payload) => {
           'Authorization': `Bearer ${ANON_KEY}`,
           'apikey': ANON_KEY
         },
-        body: JSON.stringify({
+        body: JSON.stringify([{
           url: session.url,
           description: description,
           amount: amount,
           currency: currency.toUpperCase(),
           created_at: new Date().toISOString()
-        })
+        }])
       })
       console.log('Link guardado en Insforge DB');
     } catch (saveErr) {
@@ -300,12 +300,12 @@ ipcMain.handle('db-create-contract', async (event, payload) => {
         'apikey': ANON_KEY,
         'Prefer': 'return=representation'
       },
-      body: JSON.stringify({
+      body: JSON.stringify([{
         ...payload,
         status: 'pending',
         expiry_at: expiryAt.toISOString(),
         created_at: new Date().toISOString()
-      })
+      }])
     })
     const data = await response.json()
     
@@ -328,7 +328,7 @@ ipcMain.handle('db-create-contract', async (event, payload) => {
   }
 })
 
-ipcMain.handle('stripe-generate-contract-links', async (event, { contractId, amount, description, scheme }) => {
+ipcMain.handle('stripe-generate-contract-links', async (event, { contractId, amount, description, scheme, recurringAmount }) => {
   try {
     const splits = [];
     if (scheme === '50-50') {
@@ -358,12 +358,108 @@ ipcMain.handle('stripe-generate-contract-links', async (event, { contractId, amo
         success_url: 'https://payforge.azokia.com/success',
         cancel_url: 'https://payforge.azokia.com/cancel',
       });
-      links.push({ label: split.label, url: session.url, amount: split.amount });
+      const link = { label: split.label, url: session.url, amount: split.amount, mode: 'payment' };
+      links.push(link);
+
+      await fetch(`${INSFORGE_URL}/api/database/records/payment_links`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${ANON_KEY}`,
+          'apikey': ANON_KEY
+        },
+        body: JSON.stringify([{
+          url: session.url,
+          description: `${description} - ${split.label}`,
+          amount: split.amount,
+          currency: 'USD',
+          created_at: new Date().toISOString()
+        }])
+      });
+    }
+
+    if (recurringAmount && Number(recurringAmount) > 0) {
+      const recurringCents = Math.round(Number(recurringAmount) * 100);
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: { name: `${description} - Suscripción mensual` },
+            unit_amount: recurringCents,
+            recurring: { interval: 'month' },
+          },
+          quantity: 1,
+        }],
+        mode: 'subscription',
+        success_url: 'https://payforge.azokia.com/success',
+        cancel_url: 'https://payforge.azokia.com/cancel',
+      });
+
+      const link = { label: 'Suscripción mensual', url: session.url, amount: recurringCents, mode: 'subscription' };
+      links.push(link);
+
+      await fetch(`${INSFORGE_URL}/api/database/records/payment_links`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${ANON_KEY}`,
+          'apikey': ANON_KEY
+        },
+        body: JSON.stringify([{
+          url: session.url,
+          description: `${description} - Suscripción mensual`,
+          amount: recurringCents,
+          currency: 'USD',
+          created_at: new Date().toISOString()
+        }])
+      });
     }
 
     return { data: links, error: null };
   } catch (error) {
     return { data: null, error: error.message };
+  }
+})
+
+ipcMain.handle('stripe-generate-single-contract-link', async (event, { amount, description, label, mode = 'payment' }) => {
+  try {
+    const unitAmount = Math.round(Number(amount) * 100)
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: { name: `${description} - ${label}` },
+          unit_amount: unitAmount,
+          ...(mode === 'subscription' ? { recurring: { interval: 'month' } } : {})
+        },
+        quantity: 1,
+      }],
+      mode,
+      success_url: 'https://payforge.azokia.com/success',
+      cancel_url: 'https://payforge.azokia.com/cancel',
+    })
+
+    await fetch(`${INSFORGE_URL}/api/database/records/payment_links`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ANON_KEY}`,
+        'apikey': ANON_KEY
+      },
+      body: JSON.stringify([{
+        url: session.url,
+        description: `${description} - ${label}`,
+        amount: unitAmount,
+        currency: 'USD',
+        created_at: new Date().toISOString()
+      }])
+    })
+
+    return { data: { label, url: session.url, amount: unitAmount, mode }, error: null }
+  } catch (error) {
+    return { data: null, error: error.message }
   }
 })
 
@@ -427,12 +523,12 @@ ipcMain.handle('db-create-proposal', async (event, payload) => {
         'apikey': ANON_KEY,
         'Prefer': 'return=representation'
       },
-      body: JSON.stringify({
+      body: JSON.stringify([{
         ...payload,
         status: 'draft',
         expiry_at: expiryAt.toISOString(),
         created_at: new Date().toISOString()
-      })
+      }])
     })
     const data = await response.json()
     return { data: data[0], error: response.ok ? null : data }

@@ -2,8 +2,8 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
         <div>
-            <h2 class="text-display-lg text-slate-900">Módulo de Contratos</h2>
-            <p class="text-slate-500 font-medium">Gestiona acuerdos legales y firmas digitales con tus clientes.</p>
+            <h2 id="contracts-page-title" class="text-display-lg text-slate-900">Módulo de Contratos</h2>
+            <p id="contracts-page-subtitle" class="text-slate-500 font-medium">Gestiona acuerdos legales y firmas digitales con tus clientes.</p>
         </div>
         <button onclick="openContractModal()" class="px-6 py-3 bg-black text-white rounded-xl font-bold flex items-center gap-2 hover:bg-slate-800 transition-all shadow-lg active:scale-95">
             <span class="material-symbols-outlined">insert_drive_file</span>
@@ -22,7 +22,7 @@
             <h3 id="stat-pending-contracts" class="text-3xl font-bold text-amber-600">--</h3>
         </div>
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-green-500">
-            <p class="text-label-caps text-slate-500 mb-2">Firmados</p>
+            <p class="text-label-caps text-slate-500 mb-2">Activos</p>
             <h3 id="stat-signed-contracts" class="text-3xl font-bold text-green-600">--</h3>
         </div>
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-red-500">
@@ -34,9 +34,9 @@
     <!-- Contracts Table -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-            <h3 class="font-bold text-slate-800">Contratos Activos</h3>
+            <h3 id="contracts-table-title" class="font-bold text-slate-800">Todos los Contratos</h3>
             <div class="flex items-center gap-2">
-                <span class="text-xs text-slate-400 font-medium italic">Vigencia automática: 7 días</span>
+                <span id="contracts-table-hint" class="text-xs text-slate-400 font-medium italic">Links pendientes vencen en 7 días</span>
             </div>
         </div>
         <div class="overflow-x-auto">

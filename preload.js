@@ -50,5 +50,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getProposals: async () => ipcRenderer.invoke('db-get-proposals'),
   createProposal: async (data) => ipcRenderer.invoke('db-create-proposal', data),
   getCalendarEvents: async () => ipcRenderer.invoke('db-get-calendar-events'),
-  generateContractLinks: async (data) => ipcRenderer.invoke('stripe-generate-contract-links', data)
+  generateContractLinks: async (data) => ipcRenderer.invoke('stripe-generate-contract-links', data),
+  generateSingleContractLink: async (data) => ipcRenderer.invoke('stripe-generate-single-contract-link', data)
 })

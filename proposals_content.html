@@ -38,6 +38,7 @@
                     <tr class="bg-slate-50/50">
                         <th class="px-6 py-4 text-label-caps text-slate-500 border-b border-slate-100">Proyecto / Cliente</th>
                         <th class="px-6 py-4 text-label-caps text-slate-500 border-b border-slate-100">Tecnologías</th>
+                        <th class="px-6 py-4 text-label-caps text-slate-500 border-b border-slate-100">Precio</th>
                         <th class="px-6 py-4 text-label-caps text-slate-500 border-b border-slate-100">Estado</th>
                         <th class="px-6 py-4 text-label-caps text-slate-500 border-b border-slate-100">Vencimiento</th>
                         <th class="px-6 py-4 text-label-caps text-slate-500 border-b border-slate-100 text-right">Acciones</th>
@@ -45,7 +46,7 @@
                 </thead>
                 <tbody id="proposals-table-body">
                     <tr>
-                        <td colspan="5" class="px-6 py-12 text-center text-slate-400">Cargando propuestas...</td>
+                        <td colspan="6" class="px-6 py-12 text-center text-slate-400">Cargando propuestas...</td>
                     </tr>
                 </tbody>
             </table>
@@ -87,28 +88,61 @@
                         <option value="Full Stack">Full Stack</option>
                     </select>
                 </div>
-                <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Lenguaje Principal</label>
-                    <input type="text" id="proposal-language" placeholder="TypeScript, Go, Python..." class="w-full rounded-xl border-slate-200 text-sm">
-                </div>
-                <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Backend</label>
-                    <input type="text" id="proposal-backend" placeholder="Node.js, FastAPI, etc." class="w-full rounded-xl border-slate-200 text-sm">
-                </div>
             </div>
 
             <div class="space-y-4">
-                <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Frameworks & Skills (Separados por coma)</label>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex items-center justify-between gap-4">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Stack tecnico</label>
+                    <span class="text-[10px] text-slate-400 font-medium">Selecciona uno o varios</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="space-y-2">
+                        <label class="text-[10px] text-slate-500 uppercase">Lenguaje</label>
+                        <div id="proposal-language-options" class="grid grid-cols-2 gap-2"><!-- Se llena con JS --></div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] text-slate-500 uppercase">Backend / Datos</label>
+                        <div id="proposal-backend-options" class="grid grid-cols-2 gap-2"><!-- Se llena con JS --></div>
+                    </div>
                     <div class="space-y-2">
                         <label class="text-[10px] text-slate-500 uppercase">Frameworks</label>
-                        <input type="text" id="proposal-frameworks" placeholder="React, Tailwind, Express..." class="w-full rounded-xl border-slate-200 text-sm">
+                        <div id="proposal-framework-options" class="grid grid-cols-2 gap-2"><!-- Se llena con JS --></div>
                     </div>
                     <div class="space-y-2">
-                        <label class="text-[10px] text-slate-500 uppercase">Skills Requeridos</label>
-                        <input type="text" id="proposal-skills" placeholder="UI/UX, Stripe API, Auth..." class="w-full rounded-xl border-slate-200 text-sm">
+                        <label class="text-[10px] text-slate-500 uppercase">Skills / Integraciones</label>
+                        <div id="proposal-skill-options" class="grid grid-cols-2 gap-2"><!-- Se llena con JS --></div>
                     </div>
                 </div>
+
+                <div class="space-y-2">
+                    <label class="text-[10px] text-slate-500 uppercase">Extras separados por coma</label>
+                    <input type="text" id="proposal-extra-stack" placeholder="Ej: Laravel, MySQL, Docker" class="w-full rounded-xl border-slate-200 text-sm">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Precio del Proyecto (USD)</label>
+                    <input type="number" id="proposal-amount" placeholder="100.00" class="w-full rounded-xl border-slate-200 text-sm font-bold text-slate-900">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Esquema de Pago</label>
+                    <select id="proposal-payment-scheme" class="w-full rounded-xl border-slate-200 text-sm">
+                        <option value="50-50">50% Anticipo / 50% Entrega</option>
+                        <option value="3-parts">30% Inicio / 40% Hito / 30% Final</option>
+                        <option value="100-upfront">100% Por Adelantado</option>
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Suscripcion Mensual (USD)</label>
+                    <input type="number" id="proposal-recurring-amount" placeholder="0.00" class="w-full rounded-xl border-slate-200 text-sm">
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Propuesta Generada</label>
+                <textarea id="proposal-generated-text" class="w-full min-h-[180px] rounded-xl border-slate-200 bg-slate-50 text-sm text-slate-700" readonly placeholder="Se generara automaticamente con los datos seleccionados."></textarea>
             </div>
 
             <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-6">

@@ -214,6 +214,10 @@
                 <span class="material-symbols-outlined">group</span>
                 Clientes
             </a>
+            <a data-page="proposals" class="nav-item flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white cursor-pointer transition-colors active:scale-[0.98] transition-transform duration-150">
+                <span class="material-symbols-outlined">request_quote</span>
+                Propuestas
+            </a>
             <a data-page="history" class="nav-item flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white cursor-pointer transition-colors active:scale-[0.98] transition-transform duration-150">
                 <span class="material-symbols-outlined">history</span>
                 Historial
@@ -225,6 +229,14 @@
             <a data-page="contracts" class="nav-item flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white cursor-pointer transition-colors active:scale-[0.98] transition-transform duration-150">
                 <span class="material-symbols-outlined">description</span>
                 Contratos
+            </a>
+            <a data-page="contracts-active" class="nav-item flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white cursor-pointer transition-colors active:scale-[0.98] transition-transform duration-150">
+                <span class="material-symbols-outlined">verified</span>
+                Contratos Activos
+            </a>
+            <a data-page="calendar" class="nav-item flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white cursor-pointer transition-colors active:scale-[0.98] transition-transform duration-150">
+                <span class="material-symbols-outlined">calendar_month</span>
+                Calendario
             </a>
         </nav>
         <div class="mt-auto space-y-1 border-t border-slate-800 pt-4">
@@ -389,7 +401,8 @@
 
         async function loadPage(pageName) {
             try {
-                const response = await fetch(`${pageName}_content.html`);
+                const contentPageName = pageName === 'contracts-active' ? 'contracts' : pageName;
+                const response = await fetch(`${contentPageName}_content.html`);
                 const html = await response.text();
                 mainContent.innerHTML = html;
                 
@@ -417,7 +430,9 @@
                 } else if (pageName === 'proposals') {
                     loadProposals();
                 } else if (pageName === 'contracts') {
-                    loadContracts();
+                    loadContracts(false);
+                } else if (pageName === 'contracts-active') {
+                    loadContracts(true);
                 } else if (pageName === 'calendar') {
                     loadCalendar();
                 }
@@ -495,7 +510,42 @@ En fecha {{DATE_FULL}}, las partes aceptan los términos aquí descritos mediant
             container.appendChild(div);
         };
 
-        async function loadContracts() {
+        let availableProposalsForContract = [];
+        let currentContractsData = [];
+
+        function getContractPaymentActions(contract) {
+            const amount = Number(contract.amount || 0);
+            const recurring = Number(contract.recurring_amount || 0);
+            const scheme = contract.payment_scheme || '50-50';
+            const actions = [];
+
+            if (scheme === '3-parts') {
+                actions.push({ label: '30% Inicio', amount: amount * 0.3, mode: 'payment' });
+                actions.push({ label: '40% Hito', amount: amount * 0.4, mode: 'payment' });
+                actions.push({ label: '30% Final', amount: amount * 0.3, mode: 'payment' });
+            } else if (scheme === '100-upfront') {
+                actions.push({ label: '100% Pago', amount, mode: 'payment' });
+            } else {
+                actions.push({ label: '50% Anticipo', amount: amount * 0.5, mode: 'payment' });
+                actions.push({ label: '50% Saldo', amount: amount * 0.5, mode: 'payment' });
+            }
+
+            if (recurring > 0) {
+                actions.push({ label: 'Suscripcion mensual', amount: recurring, mode: 'subscription' });
+            }
+
+            return actions;
+        }
+
+        function renderContractPaymentButtons(contract) {
+            return getContractPaymentActions(contract).map((action, index) => `
+                <button onclick="generateContractSinglePaymentLinkById('${contract.id}', ${index})" class="px-2 py-1 hover:bg-blue-50 rounded text-[10px] font-bold text-blue-600 border border-blue-100" title="Generar ${escapeHtml(action.label)}">
+                    ${escapeHtml(action.label)}
+                </button>
+            `).join('');
+        }
+
+        async function loadContracts(activeOnly = false) {
             console.log('[Contracts] Cargando listado...');
             const tbody = document.getElementById('contracts-table-body');
             if (!tbody) return;
@@ -507,22 +557,40 @@ En fecha {{DATE_FULL}}, las partes aceptan los términos aquí descritos mediant
                 return;
             }
 
+            const viewData = activeOnly ? data.filter(c => c.status === 'signed') : data;
+            currentContractsData = data;
+            const title = document.getElementById('contracts-page-title');
+            const subtitle = document.getElementById('contracts-page-subtitle');
+            const tableTitle = document.getElementById('contracts-table-title');
+            const tableHint = document.getElementById('contracts-table-hint');
+            if (activeOnly) {
+                if (title) title.innerText = 'Contratos Activos';
+                if (subtitle) subtitle.innerText = 'Contratos firmados por el cliente y listos para seguimiento.';
+                if (tableTitle) tableTitle.innerText = 'Contratos Firmados';
+                if (tableHint) tableHint.innerText = 'Se activan automaticamente al firmar';
+            }
+
             // Actualizar Stats
             document.getElementById('stat-total-contracts').innerText = data.length;
             document.getElementById('stat-pending-contracts').innerText = data.filter(c => c.status === 'pending').length;
             document.getElementById('stat-signed-contracts').innerText = data.filter(c => c.status === 'signed').length;
             document.getElementById('stat-cancelled-contracts').innerText = data.filter(c => c.status === 'cancelled').length;
 
-            if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">No hay contratos registrados.</td></tr>`;
+            if (viewData.length === 0) {
+                const emptyMessage = activeOnly
+                    ? 'No hay contratos activos. Cuando un cliente firme, aparecera aqui.'
+                    : 'No hay contratos registrados.';
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">${emptyMessage}</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = data.map(c => {
-                const clientName = c.clients?.name || 'Cliente Desconocido';
+            tbody.innerHTML = viewData.map(c => {
+                const clientName = c.client_name || c.clients?.name || 'Cliente Desconocido';
                 const projectName = c.description || 'Proyecto sin nombre';
                 const amount = (c.amount || 0).toLocaleString('en-US', { style: 'currency', currency: c.currency || 'USD' });
-                const expiry = new Date(c.expiry_at).toLocaleDateString();
+                const expiry = c.status === 'signed' && c.signed_at
+                    ? new Date(c.signed_at).toLocaleDateString()
+                    : (c.expiry_at ? new Date(c.expiry_at).toLocaleDateString() : '-');
                 
                 const statusMap = {
                     pending: { label: 'Pendiente', bg: 'bg-amber-100', text: 'text-amber-700' },
@@ -558,6 +626,7 @@ En fecha {{DATE_FULL}}, las partes aceptan los términos aquí descritos mediant
                                     <button onclick="downloadContractPDF('${c.id}')" class="p-1.5 hover:bg-green-50 rounded text-green-600" title="Descargar PDF">
                                         <span class="material-symbols-outlined text-lg">picture_as_pdf</span>
                                     </button>
+                                    ${renderContractPaymentButtons(c)}
                                 ` : ''}
                                 <button onclick="deleteContract('${c.id}')" class="p-1.5 hover:bg-slate-100 rounded text-slate-400 hover:text-red-600" title="Eliminar registro">
                                     <span class="material-symbols-outlined text-lg">delete</span>
@@ -572,11 +641,15 @@ En fecha {{DATE_FULL}}, las partes aceptan los términos aquí descritos mediant
         window.openContractModal = async () => {
             const modal = document.getElementById('contract-modal');
             const clientSelect = document.getElementById('contract-client');
+            const proposalSelect = document.getElementById('contract-proposal');
             
             modal.classList.remove('hidden');
 
-            // Cargar clientes
-            const { data, error } = await window.electronAPI.getClients();
+            const [{ data }, proposalsRes] = await Promise.all([
+                window.electronAPI.getClients(),
+                window.electronAPI.getProposals()
+            ]);
+
             if (data) {
                 let optionsHTML = '<option value="">Selecciona...</option>';
                 for(let i=0; i<data.length; i++) {
@@ -584,6 +657,30 @@ En fecha {{DATE_FULL}}, las partes aceptan los términos aquí descritos mediant
                     optionsHTML += '<option value="' + cl.id + '" data-name="' + cl.name + '" data-email="' + cl.email + '">' + cl.name + '</option>';
                 }
                 clientSelect.innerHTML = optionsHTML;
+            }
+
+            if (proposalSelect && proposalsRes.data) {
+                const proposals = proposalsRes.data.filter(p => p.status !== 'annexed');
+                availableProposalsForContract = proposals;
+                let optionsHTML = '<option value="">Ninguna...</option>';
+                proposals.forEach(p => {
+                    const clientName = p.clients?.name ? ` - ${p.clients.name}` : '';
+                    optionsHTML += `<option value="${p.id}">${escapeHtml(p.project_name)}${escapeHtml(clientName)}</option>`;
+                });
+                proposalSelect.innerHTML = optionsHTML;
+                proposalSelect.onchange = () => {
+                    const selectedProposal = availableProposalsForContract.find(p => p.id === proposalSelect.value);
+                    const projectInput = document.getElementById('contract-project');
+                    if (!selectedProposal) return;
+
+                    if (selectedProposal.project_name && !projectInput.value) {
+                        projectInput.value = selectedProposal.project_name;
+                    }
+                    if (selectedProposal.client_id) clientSelect.value = selectedProposal.client_id;
+                    if (selectedProposal.amount) document.getElementById('contract-amount').value = selectedProposal.amount;
+                    if (selectedProposal.payment_scheme) document.getElementById('payment-scheme').value = selectedProposal.payment_scheme;
+                    if (selectedProposal.recurring_amount) document.getElementById('recurring-amount').value = selectedProposal.recurring_amount;
+                };
             }
         };
 
@@ -668,6 +765,11 @@ En fecha {{DATE_FULL}}, las partes aceptan los términos aquí descritos mediant
                 const now = new Date();
                 const dateFull = `${now.getDate()} de ${months[now.getMonth()]} del ${now.getFullYear()}`;
 
+                const selectedProposal = availableProposalsForContract.find(p => p.id === document.getElementById('contract-proposal').value);
+                const proposalAnnex = selectedProposal?.proposal_text
+                    ? `\n\n---\n\n## ANEXO DE PROPUESTA TECNICA\n${selectedProposal.proposal_text}`
+                    : '';
+
                 const finalTerms = MASTER_CONTRACT_TEMPLATE
                     .replace(/{{CONTRACT_TYPE}}/g, document.getElementById('contract-type').value)
                     .replace(/{{PROJECT_NAME}}/g, projectName)
@@ -678,12 +780,14 @@ En fecha {{DATE_FULL}}, las partes aceptan los términos aquí descritos mediant
                     .replace(/{{TOTAL_AMOUNT}}/g, amount.toLocaleString('en-US', { minimumFractionDigits: 2 }))
                     .replace(/{{PAYMENT_DETAILS}}/g, paymentDetails)
                     .replace(/{{RECURRING_SECTION}}/g, recurringSection)
-                    .replace(/{{DATE_FULL}}/g, dateFull);
+                    .replace(/{{DATE_FULL}}/g, dateFull) + proposalAnnex;
 
                 const payload = {
                     description: projectName,
                     amount: amount,
                     terms: finalTerms,
+                    payment_scheme: scheme,
+                    recurring_amount: recurring,
                     proposal_id: document.getElementById('contract-proposal').value || null
                 };
 
@@ -711,7 +815,13 @@ En fecha {{DATE_FULL}}, las partes aceptan los términos aquí descritos mediant
         });
 
         window.copyContractLink = (token) => {
-            const url = token.startsWith('http') ? token : `https://payforge.azokia.com/api/storage/buckets/portal-firmas/objects/index.html?token=${token}`;
+            const generatedInput = document.getElementById('generated-contract-url');
+            const value = token || generatedInput?.value || '';
+            if (!value) {
+                alert('No hay link de contrato para copiar.');
+                return;
+            }
+            const url = value.startsWith('http') ? value : `https://payforge.azokia.com/api/storage/buckets/portal-firmas/objects/index.html?token=${value}`;
             navigator.clipboard.writeText(url);
             alert('Link de contrato copiado.');
         };
@@ -727,7 +837,8 @@ En fecha {{DATE_FULL}}, las partes aceptan los términos aquí descritos mediant
             contractToCancel = null;
         };
 
-        document.getElementById('confirm-cancel-btn')?.addEventListener('click', async () => {
+        document.addEventListener('click', async (e) => {
+            if (e.target.id !== 'confirm-cancel-btn') return;
             const reason = document.getElementById('cancel-reason').value;
             const detail = document.getElementById('cancel-detail').value;
             
@@ -749,6 +860,323 @@ En fecha {{DATE_FULL}}, las partes aceptan los términos aquí descritos mediant
             alert('Generando PDF... (Función en desarrollo)');
             // Aquí llamaríamos a un handler que use jspdf o similar
         };
+
+        window.generateContractSinglePaymentLinkById = async (id, actionIndex) => {
+            const contract = currentContractsData.find(c => c.id === id);
+            if (!contract) {
+                alert('No se encontro el contrato.');
+                return;
+            }
+
+            const action = getContractPaymentActions(contract)[actionIndex];
+            if (!action || !action.amount) {
+                alert('No se pudo calcular el pago.');
+                return;
+            }
+
+            const { data, error } = await window.electronAPI.generateSingleContractLink({
+                amount: action.amount,
+                description: contract.description || 'Contrato',
+                label: action.label,
+                mode: action.mode
+            });
+
+            if (error) {
+                alert('Error generando enlace: ' + JSON.stringify(error));
+                return;
+            }
+
+            await navigator.clipboard.writeText(data.url);
+            alert(`${data.label} generado y copiado:\n${data.url}`);
+        };
+
+        window.generateContractPaymentLinksById = async (id) => {
+            const contract = currentContractsData.find(c => c.id === id);
+            if (!contract) {
+                alert('No se encontro el contrato.');
+                return;
+            }
+
+            const amount = Number(contract.amount || 0);
+            if (!amount) {
+                alert('Este contrato no tiene monto configurado.');
+                return;
+            }
+
+            const { data, error } = await window.electronAPI.generateContractLinks({
+                contractId: contract.id,
+                amount,
+                description: contract.description || 'Contrato',
+                scheme: contract.payment_scheme || '50-50',
+                recurringAmount: Number(contract.recurring_amount || 0)
+            });
+
+            if (error) {
+                alert('Error generando enlaces: ' + JSON.stringify(error));
+                return;
+            }
+
+            const summary = data.map(link => {
+                const amountText = (link.amount / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+                return `${link.label} (${amountText}): ${link.url}`;
+            }).join('\n');
+
+            await navigator.clipboard.writeText(summary);
+            alert('Enlaces generados y copiados al portapapeles:\n\n' + summary);
+            loadLinks?.();
+        };
+
+        // --- PROPOSALS PAGE LOGIC ---
+
+        const escapeHtml = (value = '') => String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
+        const splitCsv = (value = '') => value
+            .split(',')
+            .map(item => item.trim())
+            .filter(Boolean);
+
+        const proposalStackOptions = {
+            language: ['JavaScript', 'TypeScript', 'Python', 'PHP', 'HTML'],
+            backend: ['Node', 'Next.js', 'Supabase', 'InsForge', 'PostgREST'],
+            framework: ['React', 'React Native', 'Flutter', 'Electron', 'Vite'],
+            skill: ['Stripe']
+        };
+
+        function renderProposalStackOptions() {
+            Object.entries(proposalStackOptions).forEach(([category, options]) => {
+                const container = document.getElementById(`proposal-${category}-options`);
+                if (!container || container.dataset.rendered === 'true') return;
+
+                container.innerHTML = options.map(stack => `
+                    <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition-colors cursor-pointer">
+                        <input type="checkbox" value="${escapeHtml(stack)}" data-category="${category}" class="proposal-stack-checkbox rounded border-slate-300 text-black focus:ring-black">
+                        <span>${escapeHtml(stack)}</span>
+                    </label>
+                `).join('');
+                container.dataset.rendered = 'true';
+            });
+        }
+
+        function getSelectedProposalStacks() {
+            const extra = splitCsv(document.getElementById('proposal-extra-stack')?.value || '');
+            const selected = { languages: [], backend: [], frameworks: [], skills: [] };
+
+            document.querySelectorAll('.proposal-stack-checkbox:checked').forEach(input => {
+                const category = input.dataset.category;
+                if (category === 'language') selected.languages.push(input.value);
+                if (category === 'backend') selected.backend.push(input.value);
+                if (category === 'framework') selected.frameworks.push(input.value);
+                if (category === 'skill') selected.skills.push(input.value);
+            });
+
+            selected.frameworks = Array.from(new Set([...selected.frameworks, ...extra]));
+            selected.languages = Array.from(new Set(selected.languages));
+            selected.backend = Array.from(new Set(selected.backend));
+            selected.skills = Array.from(new Set(selected.skills));
+            return selected;
+        }
+
+        function formatPaymentSchemeLabel(scheme) {
+            if (scheme === '3-parts') return '30% inicio, 40% hito intermedio y 30% entrega final';
+            if (scheme === '100-upfront') return '100% por adelantado';
+            return '50% anticipo y 50% contra entrega';
+        }
+
+        function buildProposalText() {
+            const stacks = getSelectedProposalStacks();
+            const projectName = document.getElementById('proposal-project-name')?.value.trim() || 'Proyecto sin nombre';
+            const projectType = document.getElementById('proposal-type')?.value || 'Proyecto';
+            const amount = parseFloat(document.getElementById('proposal-amount')?.value) || 0;
+            const paymentScheme = document.getElementById('proposal-payment-scheme')?.value || '50-50';
+            const recurring = parseFloat(document.getElementById('proposal-recurring-amount')?.value) || 0;
+            const colors = {
+                primary: document.getElementById('proposal-color-primary-hex')?.value || '#000000',
+                accent: document.getElementById('proposal-color-accent-hex')?.value || '#2563EB'
+            };
+            const logoText = document.getElementById('proposal-logo')?.checked ? 'Si incluye logo.' : 'No incluye logo.';
+
+            return `Propuesta: ${projectName}
+Tipo de proyecto: ${projectType}
+
+Stack propuesto:
+- Lenguajes: ${stacks.languages.join(', ') || 'No especificado'}
+- Backend / datos: ${stacks.backend.join(', ') || 'No especificado'}
+- Frameworks: ${stacks.frameworks.join(', ') || 'No especificado'}
+- Skills / integraciones: ${stacks.skills.join(', ') || 'No especificado'}
+
+Condiciones economicas:
+- Precio del proyecto: USD ${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+- Esquema de pago: ${formatPaymentSchemeLabel(paymentScheme)}
+- Suscripcion mensual: ${recurring > 0 ? `USD ${recurring.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'No aplica'}
+
+Identidad visual:
+- Color primario: ${colors.primary}
+- Color de acento: ${colors.accent}
+- ${logoText}`;
+        }
+
+        function refreshProposalPreview() {
+            const preview = document.getElementById('proposal-generated-text');
+            if (preview) preview.value = buildProposalText();
+        }
+
+        async function loadProposals() {
+            console.log('[Proposals] Cargando listado...');
+            const tbody = document.getElementById('proposals-table-body');
+            if (!tbody) return;
+
+            const { data, error } = await window.electronAPI.getProposals();
+
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-red-500">Error: ${escapeHtml(error.message || error)}</td></tr>`;
+                return;
+            }
+
+            const proposals = data || [];
+            document.getElementById('stat-total-proposals').innerText = proposals.length;
+            document.getElementById('stat-draft-proposals').innerText = proposals.filter(p => p.status === 'draft').length;
+            document.getElementById('stat-annexed-proposals').innerText = proposals.filter(p => p.status === 'annexed').length;
+
+            if (proposals.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400 font-medium">No hay propuestas registradas.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = proposals.map(p => {
+                const clientName = p.clients?.name || 'Cliente sin asignar';
+                const projectName = p.project_name || 'Proyecto sin nombre';
+                const technologies = [
+                    ...(Array.isArray(p.languages) ? p.languages : []),
+                    p.backend,
+                    ...(Array.isArray(p.frameworks) ? p.frameworks : [])
+                ].filter(Boolean);
+                const amount = Number(p.amount || 0);
+                const amountText = amount
+                    ? amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+                    : '-';
+                const recurring = Number(p.recurring_amount || 0);
+                const expiry = p.expiry_at ? new Date(p.expiry_at).toLocaleDateString() : '-';
+                const statusMap = {
+                    draft: { label: 'Borrador', bg: 'bg-blue-100', text: 'text-blue-700' },
+                    annexed: { label: 'Anexada', bg: 'bg-green-100', text: 'text-green-700' }
+                };
+                const status = statusMap[p.status] || { label: p.status || 'Borrador', bg: 'bg-slate-100', text: 'text-slate-600' };
+
+                return `
+                    <tr class="hover:bg-slate-50 border-b border-slate-50 transition-colors">
+                        <td class="px-6 py-4">
+                            <p class="text-sm font-bold text-slate-900">${escapeHtml(projectName)}</p>
+                            <p class="text-xs text-slate-500">${escapeHtml(clientName)}</p>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-wrap gap-1 max-w-sm">
+                                ${technologies.length ? technologies.slice(0, 5).map(t => `<span class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-[10px] font-bold">${escapeHtml(t)}</span>`).join('') : '<span class="text-xs text-slate-400">Sin tecnologias</span>'}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <p class="text-sm font-bold text-slate-900">${amountText}</p>
+                            ${recurring > 0 ? `<p class="text-[10px] text-slate-500">${recurring.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}/mes</p>` : ''}
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${status.bg} ${status.text}">
+                                ${escapeHtml(status.label)}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-xs text-slate-500 font-medium">${expiry}</td>
+                        <td class="px-6 py-4 text-right">
+                            ${p.status !== 'annexed' ? `
+                                <button onclick="loadPage('contracts')" class="p-1.5 hover:bg-green-50 rounded text-green-600" title="Crear contrato">
+                                    <span class="material-symbols-outlined text-lg">assignment_turned_in</span>
+                                </button>
+                            ` : '<span class="text-xs text-slate-400">En contrato</span>'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.openProposalModal = async () => {
+            const modal = document.getElementById('proposal-modal');
+            const clientSelect = document.getElementById('proposal-client');
+            modal.classList.remove('hidden');
+            renderProposalStackOptions();
+
+            const { data } = await window.electronAPI.getClients();
+            if (data) {
+                clientSelect.innerHTML = '<option value="">Selecciona un cliente...</option>' + data
+                    .map(client => `<option value="${client.id}">${escapeHtml(client.name)}</option>`)
+                    .join('');
+            }
+
+            const primaryColor = document.getElementById('proposal-color-primary');
+            const primaryHex = document.getElementById('proposal-color-primary-hex');
+            const accentColor = document.getElementById('proposal-color-accent');
+            const accentHex = document.getElementById('proposal-color-accent-hex');
+            primaryColor.oninput = () => primaryHex.value = primaryColor.value;
+            primaryHex.oninput = () => primaryColor.value = primaryHex.value;
+            accentColor.oninput = () => accentHex.value = accentColor.value;
+            accentHex.oninput = () => accentColor.value = accentHex.value;
+
+            document.getElementById('proposal-form').oninput = refreshProposalPreview;
+            document.getElementById('proposal-form').onchange = refreshProposalPreview;
+            refreshProposalPreview();
+        };
+
+        window.closeProposalModal = () => {
+            document.getElementById('proposal-modal').classList.add('hidden');
+            document.getElementById('proposal-form').reset();
+            document.querySelectorAll('.proposal-stack-checkbox').forEach(input => {
+                input.checked = false;
+            });
+        };
+
+        document.addEventListener('submit', async (e) => {
+            if (e.target.id !== 'proposal-form') return;
+            e.preventDefault();
+
+            const btn = document.getElementById('save-proposal-btn');
+            btn.disabled = true;
+            btn.innerText = 'Guardando...';
+            refreshProposalPreview();
+
+            const stacks = getSelectedProposalStacks();
+            const paymentScheme = document.getElementById('proposal-payment-scheme').value;
+
+            const payload = {
+                client_id: document.getElementById('proposal-client').value || null,
+                project_name: document.getElementById('proposal-project-name').value.trim(),
+                project_type: document.getElementById('proposal-type').value,
+                languages: stacks.languages,
+                backend: stacks.backend.join(', ') || null,
+                frameworks: stacks.frameworks,
+                skills: stacks.skills,
+                amount: parseFloat(document.getElementById('proposal-amount').value) || 0,
+                payment_scheme: paymentScheme,
+                recurring_amount: parseFloat(document.getElementById('proposal-recurring-amount').value) || 0,
+                proposal_text: document.getElementById('proposal-generated-text').value,
+                colors: {
+                    primary: document.getElementById('proposal-color-primary-hex').value,
+                    accent: document.getElementById('proposal-color-accent-hex').value
+                },
+                logo_included: document.getElementById('proposal-logo').checked
+            };
+
+            const { data, error } = await window.electronAPI.createProposal(payload);
+            btn.disabled = false;
+            btn.innerText = 'Guardar Propuesta';
+
+            if (data) {
+                closeProposalModal();
+                loadProposals();
+            } else {
+                alert('Error: ' + JSON.stringify(error));
+            }
+        });
 
         // --- LINKS PAGE LOGIC ---
 
