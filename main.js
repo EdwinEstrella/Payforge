@@ -289,13 +289,8 @@ ipcMain.handle('db-get-contracts', async () => {
 
 ipcMain.handle('db-create-contract', async (event, payload) => {
   try {
-    // Calcular expiración (+7 días)
     const expiryAt = new Date()
     expiryAt.setDate(expiryAt.getDate() + 7)
-
-    // Si el cliente es manual, podríamos crear un registro de cliente temporal 
-    // o simplemente guardar el nombre/email en el contrato.
-    // Vamos a guardarlo directamente en el contrato para máxima flexibilidad.
 
     const response = await fetch(`${INSFORGE_URL}/api/database/records/contracts`, {
       method: 'POST',
@@ -313,9 +308,62 @@ ipcMain.handle('db-create-contract', async (event, payload) => {
       })
     })
     const data = await response.json()
+    
+    // Si hay propuesta, actualizar su estado a 'annexed'
+    if (response.ok && payload.proposal_id) {
+      await fetch(`${INSFORGE_URL}/api/database/records/proposals?id=eq.${payload.proposal_id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${ANON_KEY}`,
+          'apikey': ANON_KEY
+        },
+        body: JSON.stringify({ status: 'annexed' })
+      })
+    }
+
     return { data: data[0], error: response.ok ? null : data }
   } catch (error) {
     return { data: null, error: error.message }
+  }
+})
+
+ipcMain.handle('stripe-generate-contract-links', async (event, { contractId, amount, description, scheme }) => {
+  try {
+    const splits = [];
+    if (scheme === '50-50') {
+      splits.push({ label: 'Anticipo (50%)', amount: Math.round(amount * 0.5 * 100) });
+      splits.push({ label: 'Saldo (50%)', amount: Math.round(amount * 0.5 * 100) });
+    } else if (scheme === '3-parts') {
+      splits.push({ label: 'Inicio (30%)', amount: Math.round(amount * 0.3 * 100) });
+      splits.push({ label: 'Hito (40%)', amount: Math.round(amount * 0.4 * 100) });
+      splits.push({ label: 'Final (30%)', amount: Math.round(amount * 0.3 * 100) });
+    } else {
+      splits.push({ label: 'Pago Único (100%)', amount: Math.round(amount * 100) });
+    }
+
+    const links = [];
+    for (const split of splits) {
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: { name: `${description} - ${split.label}` },
+            unit_amount: split.amount,
+          },
+          quantity: 1,
+        }],
+        mode: 'payment',
+        success_url: 'https://payforge.azokia.com/success',
+        cancel_url: 'https://payforge.azokia.com/cancel',
+      });
+      links.push({ label: split.label, url: session.url, amount: split.amount });
+    }
+
+    return { data: links, error: null };
+  } catch (error) {
+    return { data: null, error: error.message };
   }
 })
 
@@ -349,6 +397,80 @@ ipcMain.handle('db-delete-contract', async (event, id) => {
     return { success: response.ok, error: response.ok ? null : 'Error al eliminar' }
   } catch (error) {
     return { success: false, error: error.message }
+  }
+})
+
+// --- PROPOSALS HANDLERS ---
+
+ipcMain.handle('db-get-proposals', async () => {
+  try {
+    const response = await fetch(`${INSFORGE_URL}/api/database/records/proposals?select=*,clients(name,email)&order=created_at.desc`, {
+      headers: { 'Authorization': `Bearer ${ANON_KEY}`, 'apikey': ANON_KEY }
+    })
+    const data = await response.json()
+    return { data, error: response.ok ? null : data }
+  } catch (error) {
+    return { data: null, error: error.message }
+  }
+})
+
+ipcMain.handle('db-create-proposal', async (event, payload) => {
+  try {
+    const expiryAt = new Date()
+    expiryAt.setDate(expiryAt.getDate() + 7)
+
+    const response = await fetch(`${INSFORGE_URL}/api/database/records/proposals`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ANON_KEY}`,
+        'apikey': ANON_KEY,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        ...payload,
+        status: 'draft',
+        expiry_at: expiryAt.toISOString(),
+        created_at: new Date().toISOString()
+      })
+    })
+    const data = await response.json()
+    return { data: data[0], error: response.ok ? null : data }
+  } catch (error) {
+    return { data: null, error: error.message }
+  }
+})
+
+ipcMain.handle('db-get-calendar-events', async () => {
+  try {
+    const [contractsRes, proposalsRes] = await Promise.all([
+      fetch(`${INSFORGE_URL}/api/database/records/contracts?select=id,description,status,created_at,expiry_at,signed_at`, {
+        headers: { 'Authorization': `Bearer ${ANON_KEY}`, 'apikey': ANON_KEY }
+      }),
+      fetch(`${INSFORGE_URL}/api/database/records/proposals?select=id,project_name,status,created_at,expiry_at`, {
+        headers: { 'Authorization': `Bearer ${ANON_KEY}`, 'apikey': ANON_KEY }
+      })
+    ]);
+
+    const contracts = await contractsRes.json();
+    const proposals = await proposalsRes.json();
+
+    const events = [];
+
+    contracts.forEach(c => {
+      events.push({ id: `c-start-${c.id}`, title: `Contrato: ${c.description}`, date: c.created_at, type: 'contract-created' });
+      if (c.expiry_at) events.push({ id: `c-exp-${c.id}`, title: `Vence Contrato: ${c.description}`, date: c.expiry_at, type: 'contract-expiry' });
+      if (c.signed_at) events.push({ id: `c-signed-${c.id}`, title: `Firmado: ${c.description}`, date: c.signed_at, type: 'contract-signed' });
+    });
+
+    proposals.forEach(p => {
+      events.push({ id: `p-start-${p.id}`, title: `Propuesta: ${p.project_name}`, date: p.created_at, type: 'proposal-created' });
+      if (p.expiry_at) events.push({ id: `p-exp-${p.id}`, title: `Vence Propuesta: ${p.project_name}`, date: p.expiry_at, type: 'proposal-expiry' });
+    });
+
+    return { data: events, error: null };
+  } catch (error) {
+    return { data: null, error: error.message };
   }
 })
 

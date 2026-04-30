@@ -44,5 +44,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getContracts: async () => ipcRenderer.invoke('db-get-contracts'),
   createContract: async (data) => ipcRenderer.invoke('db-create-contract', data),
   cancelContract: async (id, reason, detail) => ipcRenderer.invoke('db-cancel-contract', { id, reason, detail }),
-  deleteContract: async (id) => ipcRenderer.invoke('db-delete-contract', id)
+  deleteContract: async (id) => ipcRenderer.invoke('db-delete-contract', id),
+
+  // Propuestas y Calendario
+  getProposals: async () => ipcRenderer.invoke('db-get-proposals'),
+  createProposal: async (data) => ipcRenderer.invoke('db-create-proposal', data),
+  getCalendarEvents: async () => ipcRenderer.invoke('db-get-calendar-events'),
+  generateContractLinks: async (data) => ipcRenderer.invoke('stripe-generate-contract-links', data)
 })

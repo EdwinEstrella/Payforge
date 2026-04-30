@@ -308,7 +308,82 @@
             window.location.href = 'index.html'
         })
 
-        // SPA Navigation Logic
+        // --- CALENDAR PAGE LOGIC ---
+
+        let currentCalendarDate = new Date();
+        let calendarEvents = [];
+
+        async function loadCalendar() {
+            console.log('[Calendar] Cargando eventos...');
+            const { data, error } = await window.electronAPI.getCalendarEvents();
+            if (error) {
+                console.error('Error loading calendar events:', error);
+                return;
+            }
+            calendarEvents = data;
+            renderCalendar();
+        }
+
+        window.changeMonth = (delta) => {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+            renderCalendar();
+        };
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            const monthYearLabel = document.getElementById('calendar-month-year');
+            if (!grid || !monthYearLabel) return;
+
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+
+            const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            monthYearLabel.innerText = `${months[month]} ${year}`;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            grid.innerHTML = '';
+
+            // Empty days at start
+            for (let i = 0; i < firstDay; i++) {
+                grid.innerHTML += `<div class="border-r border-b border-slate-50 bg-slate-50/20"></div>`;
+            }
+
+            // Days of month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = new Date(year, month, day).toDateString();
+                const dayEvents = calendarEvents.filter(e => new Date(e.date).toDateString() === dateStr);
+
+                const isToday = new Date().toDateString() === dateStr;
+
+                grid.innerHTML += `
+                    <div class="border-r border-b border-slate-100 p-2 space-y-1 overflow-y-auto hover:bg-slate-50 transition-colors">
+                        <span class="text-xs font-bold ${isToday ? 'bg-black text-white w-6 h-6 flex items-center justify-center rounded-full' : 'text-slate-400'}">
+                            ${day}
+                        </span>
+                        <div class="space-y-1">
+                            ${dayEvents.map(e => {
+                                const typeColors = {
+                                    'contract-created': 'bg-blue-500',
+                                    'contract-signed': 'bg-green-500',
+                                    'contract-expiry': 'bg-red-500',
+                                    'proposal-created': 'bg-purple-500',
+                                    'proposal-expiry': 'bg-amber-500'
+                                };
+                                return `
+                                    <div class="px-1.5 py-0.5 rounded text-[9px] font-bold text-white truncate shadow-sm ${typeColors[e.type] || 'bg-slate-500'}" title="${e.title}">
+                                        ${e.title}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // --- SPA Navigation Logic ---
         const mainContent = document.getElementById('main-content');
         const navItems = document.querySelectorAll('.nav-item');
 
@@ -339,8 +414,12 @@
                     loadHistory();
                 } else if (pageName === 'links') {
                     loadLinks();
+                } else if (pageName === 'proposals') {
+                    loadProposals();
                 } else if (pageName === 'contracts') {
                     loadContracts();
+                } else if (pageName === 'calendar') {
+                    loadCalendar();
                 }
             } catch (error) {
                 console.error('Error loading page:', error);
@@ -604,7 +683,8 @@ En fecha {{DATE_FULL}}, las partes aceptan los términos aquí descritos mediant
                 const payload = {
                     description: projectName,
                     amount: amount,
-                    terms: finalTerms
+                    terms: finalTerms,
+                    proposal_id: document.getElementById('contract-proposal').value || null
                 };
 
                 if (isManualClient) {
