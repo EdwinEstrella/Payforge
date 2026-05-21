@@ -114,38 +114,223 @@ ipcMain.on('install-update', () => {
 // Obtener lista de clientes desde Insforge
 ipcMain.handle('db-get-clients', async () => {
   try {
-    const response = await fetch(`${INSFORGE_URL}/api/database/records/clients?select=*&order=name.asc`, {
-      headers: {
-        'Authorization': `Bearer ${ANON_KEY}`,
-        'apikey': ANON_KEY
+    const [clients, subscriptions, paymentHistory] = await Promise.all([
+      getInsforgeRecords('clients', 'select=*&order=name.asc'),
+      getInsforgeRecords('subscriptions', 'select=*'),
+      getInsforgeRecords('payment_history', 'select=*&order=created_at.desc')
+    ])
+
+    const subscriptionsByClient = new Map()
+    for (const subscription of subscriptions) {
+      const existing = subscriptionsByClient.get(subscription.client_id)
+      const currentEnd = new Date(subscription.current_period_end || 0).getTime()
+      const existingEnd = new Date(existing?.current_period_end || 0).getTime()
+      if (!existing || currentEnd > existingEnd) {
+        subscriptionsByClient.set(subscription.client_id, subscription)
       }
-    })
-    const data = await response.json()
-    return { data, error: response.ok ? null : data }
+    }
+
+    const latestPaymentByClient = new Map()
+    for (const payment of paymentHistory) {
+      if (!payment.client_id || latestPaymentByClient.has(payment.client_id)) continue
+      if (!['succeeded', 'refunded'].includes(payment.status)) continue
+      latestPaymentByClient.set(payment.client_id, payment)
+    }
+
+    const enrichedClients = await Promise.all(clients.map(async (client) => {
+      const subscription = subscriptionsByClient.get(client.id) || null
+      const latestPayment = latestPaymentByClient.get(client.id) || null
+      const stripeDetails = await getStripeSubscriptionDetails(subscription?.stripe_subscription_id)
+
+      return {
+        ...client,
+        subscription_status: stripeDetails?.status || subscription?.status || null,
+        subscription_amount: stripeDetails?.amount ?? latestPayment?.amount ?? null,
+        subscription_currency: stripeDetails?.currency || latestPayment?.currency || null,
+        subscription_interval: stripeDetails?.interval || null,
+        next_invoice_at: stripeDetails?.nextInvoiceAt || subscription?.current_period_end || null,
+        last_payment_amount: latestPayment?.amount ?? null,
+        last_payment_currency: latestPayment?.currency || null,
+        last_payment_at: latestPayment?.created_at || null
+      }
+    }))
+
+    return { data: enrichedClients, error: null }
   } catch (error) {
     return { data: null, error: error.message }
   }
 })
 
-// Llamar a la función de sincronización inicial
+async function getStripeSubscriptionDetails (subscriptionId) {
+  if (!subscriptionId) return null
+
+  try {
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+    const item = subscription.items?.data?.[0]
+    const price = item?.price
+    return {
+      status: subscription.status,
+      amount: price?.unit_amount ?? null,
+      currency: price?.currency || null,
+      interval: price?.recurring?.interval || null,
+      nextInvoiceAt: toIso(subscription.current_period_end || item?.current_period_end)
+    }
+  } catch (error) {
+    console.error(`No se pudo leer la suscripci?n ${subscriptionId}:`, error.message)
+    return null
+  }
+}
+
+// Sincronizar Stripe directo desde Electron. No dependemos de Edge Functions para evitar webhooks/handlers rotos.
 ipcMain.handle('stripe-sync-customers', async () => {
   try {
-    console.log('Llamando a sync-customers-handler-new2...');
-    const response = await fetch(`${INSFORGE_URL}/functions/sync-customers-handler-new2`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${ANON_KEY}`,
-        'apikey': ANON_KEY
-      }
-    })
-    const data = await response.json()
-    console.log('Respuesta sync:', data);
-    return { data, error: response.ok ? null : data }
+    const result = await syncStripeToInsforge()
+    return { data: result, error: null }
   } catch (error) {
-    console.error('Error en sync:', error);
+    console.error('Error en sync:', error)
     return { data: null, error: error.message }
   }
 })
+
+async function syncStripeToInsforge () {
+  const [customers, subscriptions, charges] = await Promise.all([
+    stripe.customers.list({ limit: 100 }),
+    stripe.subscriptions.list({ status: 'all', limit: 100 }),
+    stripe.charges.list({ limit: 100 })
+  ])
+
+  const subscriptionsByCustomer = new Map()
+  for (const subscription of subscriptions.data) {
+    const list = subscriptionsByCustomer.get(subscription.customer) || []
+    list.push(subscription)
+    subscriptionsByCustomer.set(subscription.customer, list)
+  }
+
+  const bestCustomerByEmail = new Map()
+  for (const customer of customers.data) {
+    if (!customer.email) continue
+    const hasActiveSubscription = (subscriptionsByCustomer.get(customer.id) || [])
+      .some(subscription => ['active', 'trialing'].includes(subscription.status))
+    const score = (hasActiveSubscription ? 10_000_000_000_000 : 0) + customer.created
+    const current = bestCustomerByEmail.get(customer.email)
+    if (!current || score > current.score) {
+      bestCustomerByEmail.set(customer.email, { customer, score, hasActiveSubscription })
+    }
+  }
+
+  const syncedClients = []
+  for (const { customer, hasActiveSubscription } of bestCustomerByEmail.values()) {
+    const paymentMethod = await getStripePaymentMethodLabel(customer.id)
+    const client = await upsertInsforgeRecord('clients', 'email', customer.email, {
+      email: customer.email,
+      name: customer.name || customer.description || customer.email,
+      stripe_customer_id: customer.id,
+      status: hasActiveSubscription ? 'active' : 'inactive',
+      payment_method: paymentMethod,
+      updated_at: new Date().toISOString()
+    })
+    syncedClients.push(client)
+  }
+
+  const clients = await getInsforgeRecords('clients', 'select=id,email,stripe_customer_id')
+  const clientByStripeCustomer = new Map(clients.map(client => [client.stripe_customer_id, client]))
+
+  let syncedSubscriptions = 0
+  for (const subscription of subscriptions.data) {
+    const item = subscription.items?.data?.[0]
+    await upsertInsforgeRecord('subscriptions', 'stripe_subscription_id', subscription.id, {
+      client_id: clientByStripeCustomer.get(subscription.customer)?.id || null,
+      stripe_subscription_id: subscription.id,
+      status: subscription.status,
+      current_period_start: toIso(subscription.current_period_start || item?.current_period_start),
+      current_period_end: toIso(subscription.current_period_end || item?.current_period_end),
+      updated_at: new Date().toISOString()
+    })
+    syncedSubscriptions++
+  }
+
+  let syncedCharges = 0
+  for (const charge of charges.data) {
+    await upsertInsforgeRecord('payment_history', 'stripe_charge_id', charge.id, {
+      stripe_charge_id: charge.id,
+      client_id: clientByStripeCustomer.get(charge.customer)?.id || null,
+      amount: charge.amount,
+      currency: charge.currency,
+      status: charge.refunded ? 'refunded' : charge.status,
+      description: charge.description || charge.billing_details?.name || charge.billing_details?.email || 'Stripe charge',
+      failure_reason: charge.failure_message || null,
+      created_at: toIso(charge.created) || new Date().toISOString()
+    })
+    syncedCharges++
+  }
+
+  return {
+    message: `Sincronizados ${syncedClients.length} clientes, ${syncedSubscriptions} suscripciones y ${syncedCharges} pagos`,
+    clients: syncedClients.length,
+    subscriptions: syncedSubscriptions,
+    payments: syncedCharges
+  }
+}
+
+async function getStripePaymentMethodLabel (customerId) {
+  try {
+    const methods = await stripe.paymentMethods.list({ customer: customerId, type: 'card', limit: 1 })
+    const card = methods.data[0]?.card
+    if (!card) return 'No saved method'
+    return `${card.brand.charAt(0).toUpperCase() + card.brand.slice(1)} **** ${card.last4}`
+  } catch (_error) {
+    return 'No saved method'
+  }
+}
+
+async function getInsforgeRecords (table, query = 'select=*') {
+  const response = await fetch(`${INSFORGE_URL}/api/database/records/${table}?${query}`, {
+    headers: {
+      'Authorization': `Bearer ${ANON_KEY}`,
+      'apikey': ANON_KEY
+    }
+  })
+  const data = await response.json()
+  if (!response.ok) throw new Error(data?.message || data?.error || `No se pudo leer ${table}`)
+  return data
+}
+
+async function upsertInsforgeRecord (table, key, value, payload) {
+  const existing = await getInsforgeRecords(table, `select=*&${key}=eq.${encodeURIComponent(value)}&limit=1`)
+  if (existing.length > 0) {
+    const response = await fetch(`${INSFORGE_URL}/api/database/records/${table}?${key}=eq.${encodeURIComponent(value)}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ANON_KEY}`,
+        'apikey': ANON_KEY,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(payload)
+    })
+    const data = await response.json()
+    if (!response.ok) throw new Error(data?.message || data?.error || `No se pudo actualizar ${table}`)
+    return Array.isArray(data) ? data[0] : data
+  }
+
+  const response = await fetch(`${INSFORGE_URL}/api/database/records/${table}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${ANON_KEY}`,
+      'apikey': ANON_KEY,
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify([payload])
+  })
+  const data = await response.json()
+  if (!response.ok) throw new Error(data?.message || data?.error || `No se pudo insertar en ${table}`)
+  return Array.isArray(data) ? data[0] : data
+}
+
+function toIso (timestamp) {
+  return timestamp ? new Date(timestamp * 1000).toISOString() : null
+}
 
 // Generar link de pago dinámico (Stripe SDK directo)
 ipcMain.handle('stripe-create-link', async (event, payload) => {

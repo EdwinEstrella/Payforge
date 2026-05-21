@@ -69,6 +69,7 @@
     "electron-builder": "^26.8.1"
   },
   "dependencies": {
+    "@insforge/cli": "^0.1.81",
     "dotenv": "^17.4.2",
     "electron-log": "^5.4.3",
     "electron-updater": "^6.8.3",

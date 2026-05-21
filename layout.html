@@ -1485,6 +1485,32 @@ Identidad visual:
 
         // --- CLIENTS PAGE LOGIC ---
 
+
+        function formatMoney(amount, currency = 'usd') {
+            if (amount === null || amount === undefined) return '?';
+            return new Intl.NumberFormat('es-DO', {
+                style: 'currency',
+                currency: (currency || 'usd').toUpperCase()
+            }).format(Number(amount) / 100);
+        }
+
+        function formatDate(value) {
+            if (!value) return '?';
+            return new Intl.DateTimeFormat('es-DO', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            }).format(new Date(value));
+        }
+
+        function formatBillingLabel(client) {
+            if (client.subscription_status) {
+                const intervalMap = { month: 'mensual', year: 'anual', week: 'semanal', day: 'diario' };
+                return `Suscripci?n ${intervalMap[client.subscription_interval] || client.subscription_status}`;
+            }
+            return client.last_payment_amount ? '?ltimo pago' : 'Sin pagos';
+        }
+
         async function loadClients() {
             console.log('[Clients] Iniciando carga de clientes...');
             const tbody = document.getElementById('clients-table-body');
@@ -1495,14 +1521,14 @@ Identidad visual:
 
             if (error) {
                 console.error('[Clients] Error al obtener datos:', error);
-                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-red-500">Error: ${error.message || error}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-red-500">Error: ${error.message || error}</td></tr>`;
                 return;
             }
 
             console.log(`[Clients] Se obtuvieron ${data ? data.length : 0} clientes.`);
 
             if (!data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-12 text-center text-slate-400 font-medium">No hay clientes en la base de datos.<br><span class="text-xs font-normal">Sincronizá con Stripe para empezar.</span></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400 font-medium">No hay clientes en la base de datos.<br><span class="text-xs font-normal">Sincronizá con Stripe para empezar.</span></td></tr>`;
                 if (statActive) statActive.innerText = '0';
                 return;
             }
@@ -1529,6 +1555,18 @@ Identidad visual:
                                 <span class="material-symbols-outlined text-[12px]">credit_card</span>
                                 ${client.payment_method || 'Sin método'}
                             </span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex flex-col items-end">
+                            <span class="text-sm font-bold text-slate-900">${formatMoney(client.subscription_amount, client.subscription_currency)}</span>
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wide">${formatBillingLabel(client)}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex flex-col items-end">
+                            <span class="text-sm font-semibold text-slate-700">${formatDate(client.next_invoice_at)}</span>
+                            <span class="text-[10px] text-slate-400">${client.next_invoice_at ? 'Renovaci?n' : 'Sin pr?xima factura'}</span>
                         </div>
                     </td>
                     <td class="px-6 py-4">

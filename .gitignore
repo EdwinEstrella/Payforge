@@ -33,3 +33,17 @@ Thumbs.db
 # Package manager locks (optional, uncomment if needed)
 # package-lock.json
 # yarn.lock
+# InsForge & AI agent skills
+.insforge
+.agent
+.agents
+.augment
+.claude
+.cline
+.github/copilot*
+.kilocode
+.qoder
+.qwen
+.roo
+.trae
+.windsurf
