@@ -1506,9 +1506,9 @@ Identidad visual:
         function formatBillingLabel(client) {
             if (client.subscription_status) {
                 const intervalMap = { month: 'mensual', year: 'anual', week: 'semanal', day: 'diario' };
-                return `Suscripci?n ${intervalMap[client.subscription_interval] || client.subscription_status}`;
+                return `Suscripción ${intervalMap[client.subscription_interval] || client.subscription_status}`;
             }
-            return client.last_payment_amount ? '?ltimo pago' : 'Sin pagos';
+            return client.last_payment_amount ? 'Último pago' : 'Sin pagos';
         }
 
         async function loadClients() {
@@ -1566,7 +1566,7 @@ Identidad visual:
                     <td class="px-6 py-4 text-right">
                         <div class="flex flex-col items-end">
                             <span class="text-sm font-semibold text-slate-700">${formatDate(client.next_invoice_at)}</span>
-                            <span class="text-[10px] text-slate-400">${client.next_invoice_at ? 'Renovaci?n' : 'Sin pr?xima factura'}</span>
+                            <span class="text-[10px] text-slate-400">${client.next_invoice_at ? 'Renovación' : 'Sin próxima factura'}</span>
                         </div>
                     </td>
                     <td class="px-6 py-4">

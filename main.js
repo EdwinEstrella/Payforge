@@ -176,7 +176,7 @@ async function getStripeSubscriptionDetails (subscriptionId) {
       nextInvoiceAt: toIso(subscription.current_period_end || item?.current_period_end)
     }
   } catch (error) {
-    console.error(`No se pudo leer la suscripci?n ${subscriptionId}:`, error.message)
+    console.error(`No se pudo leer la suscripción ${subscriptionId}:`, error.message)
     return null
   }
 }
