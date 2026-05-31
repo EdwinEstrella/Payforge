@@ -332,10 +332,76 @@ function toIso (timestamp) {
   return timestamp ? new Date(timestamp * 1000).toISOString() : null
 }
 
+// Obtener tasa de cambio y conversión de USD a DOP usando Stripe FX Quotes (con fallback tolerante a fallos)
+ipcMain.handle('stripe-get-fx-rate', async (event, { amountUsdCent }) => {
+  try {
+    const baseAmount = amountUsdCent || 100 // Por defecto $1.00 USD
+    let rate = 58.50 // Tasa de fallback por defecto para RD (muy cercana a la tasa real)
+    let isLiveQuote = false
+    let quoteId = null
+
+    try {
+      // Realizar consulta directa mediante Fetch para evitar limitaciones de versiones antiguas del SDK de Stripe que no tienen registrado el recurso 'fxQuotes' (en preview)
+      const authHeader = 'Basic ' + Buffer.from(process.env.STRIPE_SECRET_KEY + ':').toString('base64')
+      
+      const params = new URLSearchParams()
+      params.append('to_currency', 'usd')
+      params.append('from_currencies[]', 'dop')
+      params.append('lock_duration', 'hour')
+
+      const response = await fetch('https://api.stripe.com/v1/fx_quotes', {
+        method: 'POST',
+        headers: {
+          'Authorization': authHeader,
+          'Stripe-Version': '2025-03-31.preview',
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: params
+      })
+
+      if (response.ok) {
+        const fxQuote = await response.json()
+        console.log('[Stripe FX API Detail] Respuesta completa de Stripe FX:', JSON.stringify(fxQuote, null, 2))
+        const dopRate = fxQuote?.rates?.dop || fxQuote?.rates?.DOP
+        if (dopRate && dopRate.exchange_rate) {
+          // Stripe devuelve la tasa DOP -> USD (por ejemplo, 0.017094)
+          // La tasa inversa USD -> DOP es 1 / tasa_stripe (por ejemplo, 58.50)
+          rate = 1 / dopRate.exchange_rate
+          isLiveQuote = true
+          quoteId = fxQuote.id
+          console.log(`[Stripe FX] Cotización oficial en vivo obtenida vía HTTP. Tasa USD->DOP: ${rate}. ID: ${quoteId}`)
+        }
+      } else {
+        const errData = await response.json().catch(() => ({}))
+        console.log(`[Stripe FX API Error] Stripe respondió con código ${response.status}:`, errData?.error?.message || response.statusText)
+      }
+    } catch (stripeErr) {
+      console.log(`[Stripe FX Fallback] Falló llamada directa a FX Quotes API. Usando simulación de tasa. Detalle: ${stripeErr.message}`)
+    }
+
+    const calculatedDopCent = Math.round(baseAmount * rate)
+
+    return {
+      data: {
+        rate,
+        usdCent: baseAmount,
+        dopCent: calculatedDopCent,
+        isLiveQuote,
+        quoteId,
+        rateFormatted: rate.toFixed(4)
+      },
+      error: null
+    }
+  } catch (err) {
+    console.error('Error general en stripe-get-fx-rate:', err.message)
+    return { data: null, error: err.message }
+  }
+})
+
 // Generar link de pago dinámico (Stripe SDK directo)
 ipcMain.handle('stripe-create-link', async (event, payload) => {
   try {
-    const { description = 'Pago de Servicio', amount, type = 'payment', interval = 'month', currency = 'usd' } = payload
+    const { description = 'Pago de Servicio', notes = '', amount, type = 'payment', interval = 'month', currency = 'usd', dopAmountText } = payload
 
     if (!amount) {
       return { data: null, error: { error: 'El monto es obligatorio' } }
@@ -345,9 +411,23 @@ ipcMain.handle('stripe-create-link', async (event, payload) => {
       return { data: null, error: { error: 'type debe ser payment o subscription' } }
     }
 
+    const finalDescription = dopAmountText && currency.toLowerCase() === 'usd'
+      ? `${description} (Aprox. RD$${dopAmountText})`
+      : description
+
+    // Combinar las notas del usuario con la nota de conversión DOP si está habilitada
+    let finalNote = notes
+    if (dopAmountText && currency.toLowerCase() === 'usd') {
+      const dopLine = `Equivalente aproximado: RD$${dopAmountText} según tasa Stripe. (Nota: Los cargos en tarjeta se procesan en USD. El monto final en pesos es un estimado de referencia y puede variar según las políticas de tu banco emisor).`
+      finalNote = notes ? `${notes}\n\n${dopLine}` : dopLine
+    }
+
     const priceData = {
       currency,
-      product_data: { name: description },
+      product_data: { 
+        name: description, // Mantiene el concepto limpio en Stripe
+        ...(finalNote ? { description: finalNote } : {}) // Asigna las notas/subtítulo en Stripe Checkout
+      },
       unit_amount: amount,
     }
 
@@ -361,15 +441,35 @@ ipcMain.handle('stripe-create-link', async (event, payload) => {
       mode: type,
       success_url: 'https://payforge.azokia.com/success?session_id={CHECKOUT_SESSION_ID}',
       cancel_url: 'https://payforge.azokia.com/cancel',
+      metadata: {
+        base_usd_amount: (amount / 100).toFixed(2),
+        ...(dopAmountText ? { equivalent_dop_amount: dopAmountText } : {})
+      }
     }
 
     if (type === 'payment') {
       sessionConfig.customer_creation = 'always'
     }
 
-    console.log('Creando Checkout Session con Stripe SDK...', { description, amount, type })
+    console.log('Creando Checkout Session con Stripe SDK...', { finalDescription, amount, type })
     const session = await stripe.checkout.sessions.create(sessionConfig)
     console.log('Sesión creada:', session.id, session.url)
+
+    let finalUrl = session.url
+    try {
+      console.log('Acortando URL con is.gd API...')
+      const shortenerRes = await fetch(`https://is.gd/create.php?format=json&url=${encodeURIComponent(session.url)}`)
+      if (shortenerRes.ok) {
+        const shortData = await shortenerRes.json()
+        if (shortData.shorturl) {
+          finalUrl = shortData.shorturl
+          console.log('URL acortada con éxito por is.gd:', finalUrl)
+        }
+      }
+    } catch (shortenErr) {
+      console.error('Error acortando URL con is.gd:', shortenErr.message)
+      // Fallback al URL largo original de Stripe para resiliencia del flujo
+    }
 
     // GUARDAR LINK EN LA BASE DE DATOS
     try {
@@ -381,8 +481,8 @@ ipcMain.handle('stripe-create-link', async (event, payload) => {
           'apikey': ANON_KEY
         },
         body: JSON.stringify([{
-          url: session.url,
-          description: description,
+          url: `${finalUrl}||${session.url}`,
+          description: finalDescription,
           amount: amount,
           currency: currency.toUpperCase(),
           created_at: new Date().toISOString()
@@ -393,7 +493,7 @@ ipcMain.handle('stripe-create-link', async (event, payload) => {
       console.error('Error al guardar link en DB:', saveErr.message);
     }
 
-    return { data: { url: session.url, sessionId: session.id }, error: null }
+    return { data: { url: finalUrl, sessionId: session.id }, error: null }
   } catch (error) {
     console.error('Error creando Checkout Session:', error.message)
     return { data: null, error: { error: error.message } }

@@ -39,6 +39,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   createPaymentLink: async (data) => ipcRenderer.invoke('stripe-create-link', data),
   syncStripeCustomers: async () => ipcRenderer.invoke('stripe-sync-customers'),
   getBalance: async () => ipcRenderer.invoke('stripe-get-balance'),
+  getFxRate: async (amountUsdCent) => ipcRenderer.invoke('stripe-get-fx-rate', { amountUsdCent }),
 
   // Contratos
   getContracts: async () => ipcRenderer.invoke('db-get-contracts'),

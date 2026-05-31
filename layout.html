@@ -261,6 +261,17 @@
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
                 <input class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-none rounded-full text-sm focus:ring-2 focus:ring-blue-500/20 transition-all" placeholder="Buscar..." type="text"/>
             </div>
+
+            <!-- Convertidor Rápido DOP ➔ USD (Stripe Rate) -->
+            <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-1.5 rounded-full text-[11px] font-semibold text-slate-600 dark:text-slate-300 shadow-sm animate-in fade-in duration-300">
+                <span class="material-symbols-outlined text-[15px] text-blue-600">currency_exchange</span>
+                <span class="text-slate-400 font-bold">RD$</span>
+                <input type="number" id="header-dop-input" placeholder="Tipeá pesos..." class="w-24 bg-transparent border-none p-0 focus:ring-0 text-slate-800 dark:text-white font-bold placeholder-slate-400 outline-none text-[11px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                <span class="text-slate-400 font-bold">➔</span>
+                <span class="text-slate-400 font-bold">US$</span>
+                <span id="header-usd-output" class="font-bold text-slate-800 dark:text-white">0.00</span>
+                <span id="header-fx-label" class="text-[9px] text-slate-400 font-bold ml-1 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded-full" title="Tasa de cambio de Stripe">1 USD = 58.50 DOP</span>
+            </div>
         </div>
         <div class="flex items-center gap-2">
             <button class="hover:bg-slate-50 dark:hover:bg-slate-800 rounded-full p-2 transition-all">
@@ -1252,20 +1263,35 @@ Identidad visual:
                 });
                 const amount = (item.amount / 100).toLocaleString('en-US', { style: 'currency', currency: item.currency.toUpperCase() });
                 
+                // Dividir entre link corto y link largo si existe el delimitador
+                const urls = (item.url || '').split('||');
+                const shortUrl = urls[0];
+                const longUrl = urls[1] || urls[0];
+
                 return `
                     <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-50">
                         <td class="px-6 py-4 text-xs font-medium text-slate-500 uppercase">${date}</td>
                         <td class="px-6 py-4 text-sm font-semibold text-slate-900">${item.description || 'Sin descripción'}</td>
                         <td class="px-6 py-4 text-sm font-bold text-slate-900">${amount}</td>
                         <td class="px-6 py-4">
-                            <div class="flex items-center gap-2 max-w-[200px]">
-                                <span class="text-xs text-blue-600 truncate underline cursor-default">${item.url}</span>
+                            <div class="flex flex-col gap-1.5 max-w-[280px]">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">Corto</span>
+                                    <span class="text-xs text-blue-600 truncate underline cursor-pointer hover:text-blue-800" onclick="copyLink('${shortUrl}')" title="${shortUrl}">${shortUrl}</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">Largo</span>
+                                    <span class="text-[10px] text-slate-500 truncate cursor-pointer hover:underline" onclick="copyLink('${longUrl}')" title="${longUrl}">${longUrl}</span>
+                                </div>
                             </div>
                         </td>
                         <td class="px-6 py-4 text-right">
                             <div class="flex justify-end gap-2">
-                                <button onclick="copyLink('${item.url}')" class="p-1.5 hover:bg-slate-100 rounded text-slate-500 hover:text-blue-600 transition-colors" title="Copiar Link">
+                                <button onclick="copyLink('${shortUrl}')" class="p-1.5 hover:bg-slate-100 rounded text-slate-500 hover:text-blue-600 transition-colors" title="Copiar Link Corto">
                                     <span class="material-symbols-outlined text-lg">content_copy</span>
+                                </button>
+                                <button onclick="copyLink('${longUrl}')" class="p-1.5 hover:bg-slate-100 rounded text-slate-500 hover:text-indigo-600 transition-colors" title="Copiar Link Largo">
+                                    <span class="material-symbols-outlined text-lg">link</span>
                                 </button>
                                 <button onclick="deleteLink(${item.id})" class="p-1.5 hover:bg-red-50 rounded text-slate-500 hover:text-red-600 transition-colors" title="Eliminar">
                                     <span class="material-symbols-outlined text-lg">delete</span>
@@ -1600,26 +1626,117 @@ Identidad visual:
             `).join('');
         }
 
+        // --- Convertidor Rápido Header (DOP ➔ USD) ---
+        function initHeaderConverter() {
+            const dopInput = document.getElementById('header-dop-input');
+            const usdOutput = document.getElementById('header-usd-output');
+            const fxLabel = document.getElementById('header-fx-label');
+            if (!dopInput || !usdOutput) return;
+
+            let debounceTimer = null;
+
+            async function updateHeaderConversion() {
+                const dopVal = parseFloat(dopInput.value) || 0;
+                if (dopVal <= 0) {
+                    usdOutput.innerText = '0.00';
+                    return;
+                }
+
+                // Usamos $1 USD (100 centavos) como base para obtener la tasa de cambio actual de Stripe
+                const { data, error } = await window.electronAPI.getFxRate(100);
+                if (error) {
+                    console.error('[Header FX] Error obteniendo tasa:', error);
+                    return;
+                }
+
+                const rate = data.rate;
+                const usdAmount = dopVal / rate;
+
+                // Actualizar interfaz
+                usdOutput.innerText = usdAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                
+                // Actualizar label de tasa e indicar procedencia
+                fxLabel.innerText = `1 USD = ${data.rateFormatted} DOP`;
+                fxLabel.title = data.isLiveQuote ? 'Tasa en tiempo real de Stripe FX Quotes' : 'Tasa de cambio de referencia de Stripe';
+                fxLabel.className = `text-[9px] font-bold ml-1 px-1.5 py-0.5 rounded-full ${data.isLiveQuote ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`;
+            }
+
+            dopInput.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(updateHeaderConversion, 300);
+            });
+        }
+
+        let activeDopEquivalentText = '';
+
         function setupPaymentForm() {
             const form = document.getElementById('payment-form');
             const typeSelect = document.getElementById('payment-type');
             const intervalGroup = document.getElementById('interval-group');
+            const amountInput = document.getElementById('payment-amount');
+            const dopConvertedAmount = document.getElementById('dop-converted-amount');
+            const dopExchangeRate = document.getElementById('dop-exchange-rate');
+            const fxBadge = document.getElementById('fx-badge');
+
             if (!form) return;
 
             typeSelect.onchange = () => {
                 intervalGroup.style.display = typeSelect.value === 'subscription' ? 'block' : 'none';
             };
 
+            // Lógica reactiva de conversión USD ➔ DOP en tiempo real
+            let modalDebounceTimer = null;
+            async function updateModalConversion() {
+                const usdVal = parseFloat(amountInput.value) || 0;
+                if (usdVal <= 0) {
+                    dopConvertedAmount.innerText = 'RD$ 0.00';
+                    activeDopEquivalentText = '';
+                    return;
+                }
+
+                dopConvertedAmount.innerHTML = '<span class="animate-pulse text-slate-400">RD$ Calculando...</span>';
+
+                const amountUsdCent = Math.round(usdVal * 100);
+                const { data, error } = await window.electronAPI.getFxRate(amountUsdCent);
+
+                if (error) {
+                    console.error('[Modal FX] Error obteniendo tasa:', error);
+                    dopConvertedAmount.innerText = 'RD$ Error al calcular';
+                    activeDopEquivalentText = '';
+                    return;
+                }
+
+                const dopCent = data.dopCent;
+                const dopAmount = dopCent / 100;
+                activeDopEquivalentText = dopAmount.toFixed(2);
+
+                // Actualizar interfaz
+                dopConvertedAmount.innerText = `RD$ ${dopAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                dopExchangeRate.innerText = `Tasa: 1 USD = ${data.rateFormatted} DOP`;
+                
+                // Badge dinámico
+                fxBadge.innerText = data.isLiveQuote ? 'En vivo (Stripe API)' : 'Simulado (Stripe Rate)';
+                fxBadge.className = `px-2 py-0.5 rounded-full font-bold text-[9px] ${data.isLiveQuote ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`;
+            }
+
+            amountInput.addEventListener('input', () => {
+                clearTimeout(modalDebounceTimer);
+                modalDebounceTimer = setTimeout(updateModalConversion, 300);
+            });
+
             form.onsubmit = async (e) => {
                 e.preventDefault();
                 const btn = document.getElementById('gen-btn');
                 const resultDiv = document.getElementById('payment-result');
+                const includeDop = document.getElementById('payment-include-dop')?.checked;
                 
                 const payload = {
                     description: document.getElementById('payment-description').value,
-                    amount: Math.round(parseFloat(document.getElementById('payment-amount').value) * 100),
+                    notes: document.getElementById('payment-notes').value || '',
+                    amount: Math.round(parseFloat(amountInput.value) * 100),
                     type: typeSelect.value,
-                    interval: typeSelect.value === 'subscription' ? document.getElementById('payment-interval').value : null
+                    interval: typeSelect.value === 'subscription' ? document.getElementById('payment-interval').value : null,
+                    dopAmountText: includeDop ? activeDopEquivalentText : null
                 };
 
                 console.log('[Stripe] Generando link simplificado con payload:', payload);
@@ -1641,6 +1758,8 @@ Identidad visual:
                 console.log('[Stripe] Link generado exitosamente:', data.url);
                 resultDiv.innerHTML = `Link de Stripe (copialo y mandalo):<br><a href="${data.url}" target="_blank" class="text-blue-600 underline break-all">${data.url}</a>`;
                 resultDiv.classList.remove('hidden');
+                
+                if (typeof loadLinks === 'function') loadLinks();
             };
         }
 
@@ -1654,15 +1773,32 @@ Identidad visual:
             } else {
                 document.getElementById('payment-description').value = '';
             }
+            
+            // Resetear campo de notas
+            const notesField = document.getElementById('payment-notes');
+            if (notesField) notesField.value = '';
 
             modal.classList.remove('hidden');
             document.getElementById('payment-result').classList.add('hidden');
+
+            // Resetear conversor del modal
+            const dopConvertedAmount = document.getElementById('dop-converted-amount');
+            const dopExchangeRate = document.getElementById('dop-exchange-rate');
+            const fxBadge = document.getElementById('fx-badge');
+            if (dopConvertedAmount) dopConvertedAmount.innerText = 'RD$ 0.00';
+            if (dopExchangeRate) dopExchangeRate.innerText = 'Tasa: 1 USD = 58.50 DOP';
+            if (fxBadge) {
+                fxBadge.innerText = 'Simulado';
+                fxBadge.className = 'px-2 py-0.5 rounded-full font-bold text-[9px] bg-slate-200 text-slate-500';
+            }
+            activeDopEquivalentText = '';
         }
 
         window.closePaymentModal = () => {
             console.log('[UI] Cerrando modal de pago.');
             document.getElementById('payment-modal').classList.add('hidden');
             document.getElementById('payment-form').reset();
+            activeDopEquivalentText = '';
         }
 
         window.openPaymentModalFromDashboard = async () => {
@@ -1706,6 +1842,7 @@ Identidad visual:
         // Load default page
         window.addEventListener('DOMContentLoaded', () => {
             loadPage('dashboard');
+            initHeaderConverter();
         });
     </script>
 </body>

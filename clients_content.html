@@ -86,8 +86,13 @@
         
         <form id="payment-form" class="space-y-4">
             <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Concepto del Pago</label>
-                <input type="text" id="payment-description" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" placeholder="Ej: Suscripción Premium" required>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Concepto del Pago (Título)</label>
+                <input type="text" id="payment-description" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm font-semibold text-slate-800" placeholder="Ej: Marketing Digital" required>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Notas / Descripción (Subtítulo)</label>
+                <textarea id="payment-notes" rows="2" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-xs text-slate-600 resize-none" placeholder="Ej: Facturación correspondiente al mes en curso."></textarea>
             </div>
 
             <div>
@@ -103,6 +108,27 @@
                 <div class="relative">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
                     <input type="number" id="payment-amount" step="0.01" class="w-full pl-8 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" placeholder="29.99" required>
+                </div>
+            </div>
+
+            <!-- Conversor a Pesos Dominicanos (DOP) en tiempo real -->
+            <div id="currency-conversion-container" class="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                <div class="flex justify-between items-center text-xs">
+                    <span class="font-bold text-slate-600 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[16px] text-blue-600">currency_exchange</span>
+                        Equivalente DOP (Stripe FX Rate)
+                    </span>
+                    <span id="fx-badge" class="px-2 py-0.5 rounded-full font-bold text-[9px] bg-slate-200 text-slate-500">Simulado</span>
+                </div>
+                <div class="flex justify-between items-baseline pt-1">
+                    <span id="dop-converted-amount" class="text-base font-bold text-slate-900">RD$ 0.00</span>
+                    <span id="dop-exchange-rate" class="text-[10px] text-slate-400 font-bold">Tasa: 1 USD = 58.50 DOP</span>
+                </div>
+                <div class="flex items-center gap-2 pt-2 border-t border-slate-200/60">
+                    <input type="checkbox" id="payment-include-dop" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" checked>
+                    <label for="payment-include-dop" class="text-[10px] font-bold text-slate-500 cursor-pointer select-none">
+                        Incluir conversión en descripción del link de Stripe
+                    </label>
                 </div>
             </div>
 
