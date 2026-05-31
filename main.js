@@ -458,22 +458,15 @@ ipcMain.handle('stripe-create-link', async (event, payload) => {
       return { data: null, error: { error: 'type debe ser payment o subscription' } }
     }
 
-    const finalDescription = dopAmountText && currency.toLowerCase() === 'usd'
-      ? `${description} (Aprox. RD$${dopAmountText})`
-      : description
-
-    // Combinar las notas del usuario con la nota de conversión DOP si está habilitada
-    let finalNote = notes
-    if (dopAmountText && currency.toLowerCase() === 'usd') {
-      const dopLine = `Equivalente aproximado: RD$${dopAmountText} según tasa Stripe. (Nota: Los cargos en tarjeta se procesan en USD. El monto final en pesos es un estimado de referencia y puede variar según las políticas de tu banco emisor).`
-      finalNote = notes ? `${notes}\n\n${dopLine}` : dopLine
-    }
+    const concept = String(description || 'Pago de Servicio').trim()
+    const paymentDetails = String(notes || '').trim()
+    const shouldShowDopReference = Boolean(dopAmountText && currency.toLowerCase() === 'usd')
 
     const priceData = {
       currency,
-      product_data: { 
-        name: description, // Mantiene el concepto limpio en Stripe
-        ...(finalNote ? { description: finalNote } : {}) // Asigna las notas/subtítulo en Stripe Checkout
+      product_data: {
+        name: concept,
+        ...(paymentDetails ? { description: paymentDetails } : {})
       },
       unit_amount: amount,
     }
@@ -491,16 +484,36 @@ ipcMain.handle('stripe-create-link', async (event, payload) => {
       cancel_url: 'https://payforge.azokia.com/cancel',
       expires_at: getCheckoutSessionExpiresAt(),
       metadata: {
+        payment_concept: concept,
+        ...(paymentDetails ? { payment_details: paymentDetails } : {}),
         base_usd_amount: (amount / 100).toFixed(2),
-        ...(dopAmountText ? { equivalent_dop_amount: dopAmountText } : {})
+        ...(shouldShowDopReference ? { equivalent_dop_amount: dopAmountText } : {})
+      }
+    }
+
+    if (shouldShowDopReference) {
+      sessionConfig.custom_text = {
+        submit: {
+          message: `Referencia DOP aproximada: RD$${dopAmountText}. El cargo se procesa en USD y puede variar segun tu banco.`
+        }
+      }
+    }
+
+    if (type === 'subscription') {
+      sessionConfig.subscription_data = {
+        metadata: sessionConfig.metadata
       }
     }
 
     if (type === 'payment') {
       sessionConfig.customer_creation = 'always'
+      sessionConfig.payment_intent_data = {
+        description: concept,
+        metadata: sessionConfig.metadata
+      }
     }
 
-    console.log('Creando Checkout Session con Stripe SDK...', { finalDescription, amount, type })
+    console.log('Creando Checkout Session con Stripe SDK...', { concept, amount, type })
     const session = await stripe.checkout.sessions.create(sessionConfig)
     console.log('Sesión creada:', session.id, session.url)
 
@@ -520,7 +533,7 @@ ipcMain.handle('stripe-create-link', async (event, payload) => {
           url: finalUrl,
           stripe_url: session.url,
           short_code: shortCode,
-          description: finalDescription,
+          description: concept,
           amount: amount,
           currency: currency.toUpperCase(),
           created_at: new Date().toISOString(),
