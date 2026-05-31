@@ -1,7 +1,7 @@
 <div class="flex items-center justify-between mb-8">
     <div>
-        <h2 class="font-headline-md text-headline-md text-slate-900">Resumen del Panel</h2>
-        <p class="font-body-md text-body-md text-slate-500 mt-1">Bienvenido de nuevo. Esto es lo que está pasando con tus pagos hoy.</p>
+        <h2 class="font-headline-md text-headline-md text-slate-100">Resumen del Panel</h2>
+        <p class="font-body-md text-body-md text-slate-400 mt-1">Bienvenido de nuevo. Esto es lo que está pasando con tus pagos hoy.</p>
     </div>
     <button onclick="openPaymentModalFromDashboard()" class="flex items-center gap-2 px-6 py-3 bg-[#2563EB] text-white rounded-xl font-semibold shadow-sm hover:bg-blue-700 transition-all active:scale-[0.98]">
         <span class="material-symbols-outlined">link</span>
@@ -10,61 +10,61 @@
 </div>
 
 <div class="grid grid-cols-12 gap-6">
-    <div class="col-span-12 lg:col-span-3 bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-sm relative overflow-hidden">
+    <div class="col-span-12 lg:col-span-3 bg-slate-900/80 border border-slate-700 p-6 rounded-xl shadow-sm relative overflow-hidden">
         <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#0F172A]"></div>
         <div class="flex justify-between items-start mb-4">
             <p class="font-label-caps text-label-caps text-slate-500 uppercase tracking-wider">Ingresos Totales</p>
             <span class="material-symbols-outlined text-blue-600 bg-blue-50 p-2 rounded-lg">payments</span>
         </div>
-        <h3 id="dash-revenue" class="font-display-lg text-display-lg text-slate-900">$0.00</h3>
+        <h3 id="dash-revenue" class="font-display-lg text-display-lg text-slate-100">$0.00</h3>
         <div class="mt-4 flex items-center gap-2 text-slate-400 font-medium text-sm">
             <span>Suma de saldo y pendientes</span>
         </div>
     </div>
 
-    <div class="col-span-12 lg:col-span-3 bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-sm relative overflow-hidden">
+    <div class="col-span-12 lg:col-span-3 bg-slate-900/80 border border-slate-700 p-6 rounded-xl shadow-sm relative overflow-hidden">
         <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#10b981]"></div>
         <div class="flex justify-between items-start mb-4">
             <p class="font-label-caps text-label-caps text-slate-500 uppercase tracking-wider">Saldo Disponible</p>
             <span class="material-symbols-outlined text-emerald-600 bg-emerald-50 p-2 rounded-lg">account_balance_wallet</span>
         </div>
-        <h3 id="dash-available" class="font-display-lg text-display-lg text-slate-900">$0.00</h3>
+        <h3 id="dash-available" class="font-display-lg text-display-lg text-slate-100">$0.00</h3>
         <div class="mt-4 flex items-center gap-2 text-emerald-600 font-medium text-sm">
             <span class="material-symbols-outlined text-sm">verified</span>
             <span>Listo para transferencia</span>
         </div>
     </div>
 
-    <div class="col-span-12 lg:col-span-3 bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-sm relative overflow-hidden">
+    <div class="col-span-12 lg:col-span-3 bg-slate-900/80 border border-slate-700 p-6 rounded-xl shadow-sm relative overflow-hidden">
         <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#2563EB]"></div>
         <div class="flex justify-between items-start mb-4">
             <p class="font-label-caps text-label-caps text-slate-500 uppercase tracking-wider">Saldo Pendiente</p>
             <span class="material-symbols-outlined text-amber-600 bg-amber-50 p-2 rounded-lg">schedule</span>
         </div>
-        <h3 id="dash-pending" class="font-display-lg text-display-lg text-slate-900">$0.00</h3>
+        <h3 id="dash-pending" class="font-display-lg text-display-lg text-slate-100">$0.00</h3>
         <div class="mt-4 flex items-center gap-2 text-slate-500 font-medium text-sm">
             <span>En proceso por Stripe</span>
         </div>
     </div>
 
-    <div class="col-span-12 lg:col-span-3 bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-sm relative overflow-hidden">
+    <div class="col-span-12 lg:col-span-3 bg-slate-900/80 border border-slate-700 p-6 rounded-xl shadow-sm relative overflow-hidden">
         <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#64748B]"></div>
         <div class="flex justify-between items-start mb-4">
             <p class="font-label-caps text-label-caps text-slate-500 uppercase tracking-wider">Links Exitosos</p>
             <span class="material-symbols-outlined text-emerald-600 bg-emerald-50 p-2 rounded-lg">check_circle</span>
         </div>
-        <h3 id="dash-links" class="font-display-lg text-display-lg text-slate-900">0</h3>
+        <h3 id="dash-links" class="font-display-lg text-display-lg text-slate-100">0</h3>
         <div class="mt-4 flex items-center gap-2 text-slate-500 font-medium text-sm">
             <span>Pagos registrados en historial</span>
         </div>
     </div>
 
-    <div class="col-span-12 lg:col-span-8 bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-sm">
+    <div class="col-span-12 lg:col-span-8 bg-slate-900/80 border border-slate-700 p-6 rounded-xl shadow-sm">
         <div class="flex items-center justify-between mb-8">
-            <h4 class="font-headline-sm text-headline-sm text-slate-900">Rendimiento de Ingresos</h4>
+            <h4 class="font-headline-sm text-headline-sm text-slate-100">Rendimiento de Ingresos</h4>
             <p class="text-xs text-slate-400 font-medium">Últimos 10 días</p>
         </div>
-        <div id="dash-chart" class="h-64 w-full bg-slate-50 rounded-lg flex items-end justify-between px-6 pb-4">
+        <div id="dash-chart" class="h-64 w-full bg-slate-900/70 rounded-lg flex items-end justify-between px-6 pb-4">
             <!-- Bars will be injected here -->
             <div class="flex flex-col items-center justify-center w-full h-full text-slate-300">
                 <span class="material-symbols-outlined animate-spin mb-2">refresh</span>
@@ -73,8 +73,8 @@
         </div>
     </div>
 
-    <div class="col-span-12 lg:col-span-4 bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-sm">
-        <h4 class="font-headline-sm text-headline-sm text-slate-900 mb-6">Actividad Reciente</h4>
+    <div class="col-span-12 lg:col-span-4 bg-slate-900/80 border border-slate-700 p-6 rounded-xl shadow-sm">
+        <h4 class="font-headline-sm text-headline-sm text-slate-100 mb-6">Actividad Reciente</h4>
         <div id="dash-activity" class="space-y-6">
             <div class="flex items-center justify-center py-12 text-slate-300">
                 <span class="material-symbols-outlined animate-spin mr-2">refresh</span>

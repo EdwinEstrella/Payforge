@@ -2,8 +2,8 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
         <div>
-            <h2 id="contracts-page-title" class="text-display-lg text-slate-900">Módulo de Contratos</h2>
-            <p id="contracts-page-subtitle" class="text-slate-500 font-medium">Gestiona acuerdos legales y firmas digitales con tus clientes.</p>
+            <h2 id="contracts-page-title" class="text-display-lg text-slate-100">Módulo de Contratos</h2>
+            <p id="contracts-page-subtitle" class="text-slate-400 font-medium">Gestiona acuerdos legales y firmas digitales con tus clientes.</p>
         </div>
         <button onclick="openContractModal()" class="px-6 py-3 bg-black text-white rounded-xl font-bold flex items-center gap-2 hover:bg-slate-800 transition-all shadow-lg active:scale-95">
             <span class="material-symbols-outlined">insert_drive_file</span>
@@ -13,28 +13,28 @@
 
     <!-- Stats -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-            <p class="text-label-caps text-slate-500 mb-2">Total Contratos</p>
-            <h3 id="stat-total-contracts" class="text-3xl font-bold text-slate-900">--</h3>
+        <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-700 shadow-sm">
+            <p class="text-label-caps text-slate-400 mb-2">Total Contratos</p>
+            <h3 id="stat-total-contracts" class="text-3xl font-bold text-slate-100">--</h3>
         </div>
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-amber-500">
-            <p class="text-label-caps text-slate-500 mb-2">Pendientes</p>
+        <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-700 shadow-sm border-l-4 border-l-amber-500">
+            <p class="text-label-caps text-slate-400 mb-2">Pendientes</p>
             <h3 id="stat-pending-contracts" class="text-3xl font-bold text-amber-600">--</h3>
         </div>
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-green-500">
-            <p class="text-label-caps text-slate-500 mb-2">Activos</p>
+        <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-700 shadow-sm border-l-4 border-l-green-500">
+            <p class="text-label-caps text-slate-400 mb-2">Activos</p>
             <h3 id="stat-signed-contracts" class="text-3xl font-bold text-green-600">--</h3>
         </div>
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-red-500">
-            <p class="text-label-caps text-slate-500 mb-2">Cancelados</p>
+        <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-700 shadow-sm border-l-4 border-l-red-500">
+            <p class="text-label-caps text-slate-400 mb-2">Cancelados</p>
             <h3 id="stat-cancelled-contracts" class="text-3xl font-bold text-red-600">--</h3>
         </div>
     </div>
 
     <!-- Contracts Table -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-            <h3 id="contracts-table-title" class="font-bold text-slate-800">Todos los Contratos</h3>
+    <div class="bg-slate-900/80 rounded-2xl border border-slate-700 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-800 bg-slate-900/70/50 flex items-center justify-between">
+            <h3 id="contracts-table-title" class="font-bold text-slate-100">Todos los Contratos</h3>
             <div class="flex items-center gap-2">
                 <span id="contracts-table-hint" class="text-xs text-slate-400 font-medium italic">Links pendientes vencen en 7 días</span>
             </div>
@@ -42,12 +42,12 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-50/50">
-                        <th class="px-6 py-4 text-label-caps text-slate-500 border-b border-slate-100">Cliente / Proyecto</th>
-                        <th class="px-6 py-4 text-label-caps text-slate-500 border-b border-slate-100">Monto</th>
-                        <th class="px-6 py-4 text-label-caps text-slate-500 border-b border-slate-100">Estado</th>
-                        <th class="px-6 py-4 text-label-caps text-slate-500 border-b border-slate-100">Vencimiento</th>
-                        <th class="px-6 py-4 text-label-caps text-slate-500 border-b border-slate-100 text-right">Acciones</th>
+                    <tr class="bg-slate-900/70/50">
+                        <th class="px-6 py-4 text-label-caps text-slate-400 border-b border-slate-800">Cliente / Proyecto</th>
+                        <th class="px-6 py-4 text-label-caps text-slate-400 border-b border-slate-800">Monto</th>
+                        <th class="px-6 py-4 text-label-caps text-slate-400 border-b border-slate-800">Estado</th>
+                        <th class="px-6 py-4 text-label-caps text-slate-400 border-b border-slate-800">Vencimiento</th>
+                        <th class="px-6 py-4 text-label-caps text-slate-400 border-b border-slate-800 text-right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="contracts-table-body">
@@ -62,10 +62,10 @@
 
 <!-- Modal: Nuevo Contrato -->
 <div id="contract-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center hidden">
-    <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-        <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-            <h3 class="text-headline-sm text-slate-900">Generar Nuevo Contrato</h3>
-            <button onclick="closeContractModal()" class="text-slate-400 hover:text-slate-600">
+    <div class="bg-slate-900/80 w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        <div class="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/70">
+            <h3 class="text-headline-sm text-slate-100">Generar Nuevo Contrato</h3>
+            <button onclick="closeContractModal()" class="text-slate-400 hover:text-slate-300">
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
@@ -75,23 +75,23 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
-                        <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Cliente</label>
-                        <button type="button" onclick="toggleNewClient()" id="toggle-client-btn" class="text-[10px] bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-bold hover:bg-slate-200">Manual</button>
+                        <label class="text-xs font-bold text-slate-200 uppercase tracking-wider">Cliente</label>
+                        <button type="button" onclick="toggleNewClient()" id="toggle-client-btn" class="text-[10px] bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700 font-bold hover:bg-slate-200">Manual</button>
                     </div>
                     <div id="client-select-container">
-                        <select id="contract-client" class="w-full rounded-xl border-slate-200 text-sm focus:ring-black focus:border-black">
+                        <select id="contract-client" class="w-full rounded-xl border-slate-700 text-sm focus:ring-black focus:border-black">
                             <option value="">Selecciona...</option>
                         </select>
                     </div>
                     <div id="client-manual-container" class="hidden space-y-2">
-                        <input type="text" id="manual-client-name" placeholder="Nombre completo" class="w-full rounded-lg border-slate-200 text-sm">
-                        <input type="email" id="manual-client-email" placeholder="Email" class="w-full rounded-lg border-slate-200 text-sm">
+                        <input type="text" id="manual-client-name" placeholder="Nombre completo" class="w-full rounded-lg border-slate-700 text-sm">
+                        <input type="email" id="manual-client-email" placeholder="Email" class="w-full rounded-lg border-slate-700 text-sm">
                     </div>
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Tipo de Proyecto</label>
-                    <select id="contract-type" class="w-full rounded-xl border-slate-200 text-sm">
+                    <label class="text-xs font-bold text-slate-200 uppercase tracking-wider">Tipo de Proyecto</label>
+                    <select id="contract-type" class="w-full rounded-xl border-slate-700 text-sm">
                         <option value="Web Personalizada">Web Personalizada</option>
                         <option value="Aplicación de Escritorio">Aplicación de Escritorio</option>
                         <option value="Mantenimiento / Soporte">Mantenimiento / Soporte</option>
@@ -100,28 +100,28 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Nombre del Proyecto</label>
-                    <input type="text" id="contract-project" placeholder="Ej: CRM Interno Azokia" class="w-full rounded-xl border-slate-200 text-sm focus:ring-black focus:border-black" required>
+                    <label class="text-xs font-bold text-slate-200 uppercase tracking-wider">Nombre del Proyecto</label>
+                    <input type="text" id="contract-project" placeholder="Ej: CRM Interno Azokia" class="w-full rounded-xl border-slate-700 text-sm focus:ring-black focus:border-black" required>
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Anexar Propuesta (Opcional)</label>
-                    <select id="contract-proposal" class="w-full rounded-xl border-slate-200 text-sm focus:ring-black focus:border-black">
+                    <label class="text-xs font-bold text-slate-200 uppercase tracking-wider">Anexar Propuesta (Opcional)</label>
+                    <select id="contract-proposal" class="w-full rounded-xl border-slate-700 text-sm focus:ring-black focus:border-black">
                         <option value="">Ninguna...</option>
                     </select>
                 </div>
             </div>
 
             <!-- Sección 2: Cronograma y Costos -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 bg-slate-900/70 p-6 rounded-2xl border border-slate-800">
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Monto Total (USD)</label>
-                    <input type="number" id="contract-amount" placeholder="0.00" class="w-full rounded-xl border-slate-200 text-sm font-bold text-slate-900">
+                    <label class="text-xs font-bold text-slate-200 uppercase tracking-wider">Monto Total (USD)</label>
+                    <input type="number" id="contract-amount" placeholder="0.00" class="w-full rounded-xl border-slate-700 text-sm font-bold text-slate-100">
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Esquema de Pago</label>
-                    <select id="payment-scheme" class="w-full rounded-xl border-slate-200 text-sm">
+                    <label class="text-xs font-bold text-slate-200 uppercase tracking-wider">Esquema de Pago</label>
+                    <select id="payment-scheme" class="w-full rounded-xl border-slate-700 text-sm">
                         <option value="50-50">50% Anticipo / 50% Entrega</option>
                         <option value="3-parts">30% Inicio / 40% Hito / 30% Final</option>
                         <option value="100-upfront">100% Por Adelantado</option>
@@ -129,10 +129,10 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Tiempo de Desarrollo</label>
+                    <label class="text-xs font-bold text-slate-200 uppercase tracking-wider">Tiempo de Desarrollo</label>
                     <div class="flex gap-2">
-                        <input type="number" id="dev-time-value" placeholder="4" class="w-20 rounded-xl border-slate-200 text-sm">
-                        <select id="dev-time-unit" class="flex-1 rounded-xl border-slate-200 text-sm">
+                        <input type="number" id="dev-time-value" placeholder="4" class="w-20 rounded-xl border-slate-700 text-sm">
+                        <select id="dev-time-unit" class="flex-1 rounded-xl border-slate-700 text-sm">
                             <option value="semanas">Semanas</option>
                             <option value="meses">Meses</option>
                             <option value="días">Días</option>
@@ -141,15 +141,15 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Costo Recurrente (USD)</label>
-                    <input type="number" id="recurring-amount" placeholder="Ej: 50.00" class="w-full rounded-xl border-slate-200 text-sm">
+                    <label class="text-xs font-bold text-slate-200 uppercase tracking-wider">Costo Recurrente (USD)</label>
+                    <input type="number" id="recurring-amount" placeholder="Ej: 50.00" class="w-full rounded-xl border-slate-700 text-sm">
                 </div>
             </div>
 
             <!-- Sección 3: Inclusiones (Dinámico) -->
             <div class="space-y-4">
                 <div class="flex items-center justify-between">
-                    <label class="text-sm font-bold text-slate-900">¿Qué incluye el proyecto?</label>
+                    <label class="text-sm font-bold text-slate-100">¿Qué incluye el proyecto?</label>
                     <button type="button" onclick="addInclusionRow()" class="flex items-center gap-1 text-xs bg-black text-white px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-all">
                         <span class="material-symbols-outlined text-sm">add</span>
                         Agregar Línea
@@ -158,7 +158,7 @@
                 <div id="inclusions-list" class="space-y-2">
                     <!-- Se llena con JS -->
                     <div class="flex gap-2 inclusion-item">
-                        <input type="text" placeholder="Ej: Diseño de Interfaz UI/UX" class="flex-1 rounded-lg border-slate-200 text-sm">
+                        <input type="text" placeholder="Ej: Diseño de Interfaz UI/UX" class="flex-1 rounded-lg border-slate-700 text-sm">
                         <button type="button" onclick="this.parentElement.remove()" class="p-2 text-slate-400 hover:text-red-500">
                             <span class="material-symbols-outlined text-lg">delete</span>
                         </button>
@@ -167,27 +167,27 @@
             </div>
 
             <!-- Sección 4: Cláusulas Estándar (Info) -->
-            <div class="p-4 bg-slate-100 rounded-xl border border-slate-200 space-y-2">
-                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Cláusulas Legales Automáticas</p>
+            <div class="p-4 bg-slate-800/80 rounded-xl border border-slate-700 space-y-2">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cláusulas Legales Automáticas</p>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <span class="flex items-center gap-1 text-[10px] font-bold text-slate-700"><span class="material-symbols-outlined text-xs text-green-600">verified</span> Confidencialidad</span>
-                    <span class="flex items-center gap-1 text-[10px] font-bold text-slate-700"><span class="material-symbols-outlined text-xs text-green-600">verified</span> Propiedad Intelectual</span>
-                    <span class="flex items-center gap-1 text-[10px] font-bold text-slate-700"><span class="material-symbols-outlined text-xs text-green-600">verified</span> Rescisión (18 meses)</span>
-                    <span class="flex items-center gap-1 text-[10px] font-bold text-slate-700"><span class="material-symbols-outlined text-xs text-green-600">verified</span> Jurisdicción Legal</span>
+                    <span class="flex items-center gap-1 text-[10px] font-bold text-slate-200"><span class="material-symbols-outlined text-xs text-green-600">verified</span> Confidencialidad</span>
+                    <span class="flex items-center gap-1 text-[10px] font-bold text-slate-200"><span class="material-symbols-outlined text-xs text-green-600">verified</span> Propiedad Intelectual</span>
+                    <span class="flex items-center gap-1 text-[10px] font-bold text-slate-200"><span class="material-symbols-outlined text-xs text-green-600">verified</span> Rescisión (18 meses)</span>
+                    <span class="flex items-center gap-1 text-[10px] font-bold text-slate-200"><span class="material-symbols-outlined text-xs text-green-600">verified</span> Jurisdicción Legal</span>
                 </div>
             </div>
 
             <div id="contract-link-result" class="hidden p-4 bg-green-50 border border-green-100 rounded-xl">
                 <p class="text-xs font-bold text-green-700 mb-1">¡Contrato Generado Exitosamente!</p>
                 <div class="flex items-center gap-2">
-                    <input type="text" id="generated-contract-url" class="flex-1 bg-white border-green-200 rounded-lg text-xs text-slate-600 py-1" readonly>
+                    <input type="text" id="generated-contract-url" class="flex-1 bg-slate-900/80 border-green-200 rounded-lg text-xs text-slate-300 py-1" readonly>
                     <button type="button" onclick="copyContractLink()" class="px-3 py-1 bg-green-600 text-white rounded-lg text-xs font-bold">Copiar</button>
                 </div>
             </div>
         </form>
 
-        <div class="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
-            <button type="button" onclick="closeContractModal()" class="px-6 py-2.5 text-slate-600 font-bold hover:bg-slate-200 rounded-xl transition-all">Cancelar</button>
+        <div class="p-6 border-t border-slate-800 flex justify-end gap-3 bg-slate-900/70">
+            <button type="button" onclick="closeContractModal()" class="px-6 py-2.5 text-slate-300 font-bold hover:bg-slate-200 rounded-xl transition-all">Cancelar</button>
             <button type="submit" form="contract-form" id="gen-contract-btn" class="px-8 py-2.5 bg-black text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-md active:scale-95">Generar y Enviar Link</button>
         </div>
     </div>
@@ -195,14 +195,14 @@
 
 <!-- Modal: Cancelar Contrato -->
 <div id="cancel-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] flex items-center justify-center hidden">
-    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-4">
-        <h3 class="text-xl font-bold text-slate-900">Cancelar Contrato</h3>
-        <p class="text-sm text-slate-500">¿Por qué deseas cancelar este contrato? Esta acción es irreversible.</p>
+    <div class="bg-slate-900/80 w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-4">
+        <h3 class="text-xl font-bold text-slate-100">Cancelar Contrato</h3>
+        <p class="text-sm text-slate-400">¿Por qué deseas cancelar este contrato? Esta acción es irreversible.</p>
         
         <div class="space-y-4">
             <div class="space-y-2">
-                <label class="text-xs font-bold text-slate-700 uppercase">Motivo de Cancelación</label>
-                <select id="cancel-reason" class="w-full rounded-lg border-slate-200 text-sm">
+                <label class="text-xs font-bold text-slate-200 uppercase">Motivo de Cancelación</label>
+                <select id="cancel-reason" class="w-full rounded-lg border-slate-700 text-sm">
                     <option value="Cliente desistió">Cliente desistió</option>
                     <option value="Incumplimiento de cláusulas">Incumplimiento de cláusulas</option>
                     <option value="Error en datos">Error en datos</option>
@@ -210,13 +210,13 @@
                 </select>
             </div>
             <div class="space-y-2">
-                <label class="text-xs font-bold text-slate-700 uppercase">Detalle adicional</label>
-                <textarea id="cancel-detail" class="w-full rounded-lg border-slate-200 text-sm" placeholder="Especifica qué cláusulas se rompieron..."></textarea>
+                <label class="text-xs font-bold text-slate-200 uppercase">Detalle adicional</label>
+                <textarea id="cancel-detail" class="w-full rounded-lg border-slate-700 text-sm" placeholder="Especifica qué cláusulas se rompieron..."></textarea>
             </div>
         </div>
 
         <div class="flex justify-end gap-3 pt-2">
-            <button onclick="closeCancelModal()" class="px-4 py-2 text-slate-500 font-bold hover:bg-slate-100 rounded-lg">Cerrar</button>
+            <button onclick="closeCancelModal()" class="px-4 py-2 text-slate-400 font-bold hover:bg-slate-800/80 rounded-lg">Cerrar</button>
             <button id="confirm-cancel-btn" class="px-6 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-all">Confirmar Cancelación</button>
         </div>
     </div>

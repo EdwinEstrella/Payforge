@@ -1,4 +1,5 @@
 const path = require('node:path')
+const { randomBytes } = require('node:crypto')
 require('dotenv').config({ path: path.join(__dirname, '.env') })
 const { app, BrowserWindow, ipcMain } = require('electron/main')
 const { autoUpdater } = require('electron-updater')
@@ -15,6 +16,60 @@ const ANON_KEY = process.env.INSFORGE_ANON_KEY
 
 // Stripe SDK directo en Node.js (sin edge function)
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+
+
+const CHECKOUT_SESSION_TTL_SECONDS = (23 * 60 * 60) + (55 * 60)
+
+function getCheckoutSessionExpiresAt () {
+  return Math.floor(Date.now() / 1000) + CHECKOUT_SESSION_TTL_SECONDS
+}
+
+function getExpiredPaymentLinksCutoffIso () {
+  return new Date().toISOString()
+}
+
+function getCheckoutSessionExpiresAtIso () {
+  return new Date(Date.now() + CHECKOUT_SESSION_TTL_SECONDS * 1000).toISOString()
+}
+
+function generateShortCode () {
+  return randomBytes(5).toString('base64url')
+}
+
+function getInternalShortUrl (shortCode) {
+  return `${INSFORGE_URL}/functions/r?c=${encodeURIComponent(shortCode)}`
+}
+
+function getRecurringConfig (billingCycle = 'monthly') {
+  const cycles = {
+    monthly: { interval: 'month', interval_count: 1, label: 'mensual' },
+    quarterly: { interval: 'month', interval_count: 3, label: 'trimestral' },
+    semiannual: { interval: 'month', interval_count: 6, label: 'semestral' },
+    yearly: { interval: 'year', interval_count: 1, label: 'anual' },
+    month: { interval: 'month', interval_count: 1, label: 'mensual' },
+    year: { interval: 'year', interval_count: 1, label: 'anual' }
+  }
+
+  return cycles[billingCycle] || cycles.monthly
+}
+
+async function deleteExpiredPaymentLinks () {
+  const cutoffIso = getExpiredPaymentLinksCutoffIso()
+  const response = await fetch(`${INSFORGE_URL}/api/database/records/payment_links?expires_at=lt.${encodeURIComponent(cutoffIso)}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${ANON_KEY}`,
+      'apikey': ANON_KEY
+    }
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '')
+    console.error('No se pudieron limpiar links expirados:', errorText || response.statusText)
+  }
+
+  return response.ok
+}
 
 let mainWindow = null
 
@@ -393,7 +448,7 @@ ipcMain.handle('stripe-get-fx-rate', async (event, { amountUsdCent }) => {
 // Generar link de pago dinámico (Stripe SDK directo)
 ipcMain.handle('stripe-create-link', async (event, payload) => {
   try {
-    const { description = 'Pago de Servicio', notes = '', amount, type = 'payment', interval = 'month', currency = 'usd', dopAmountText } = payload
+    const { description = 'Pago de Servicio', notes = '', amount, type = 'payment', interval = 'monthly', billingCycle = interval, currency = 'usd', dopAmountText } = payload
 
     if (!amount) {
       return { data: null, error: { error: 'El monto es obligatorio' } }
@@ -424,7 +479,8 @@ ipcMain.handle('stripe-create-link', async (event, payload) => {
     }
 
     if (type === 'subscription') {
-      priceData.recurring = { interval }
+      const recurringConfig = getRecurringConfig(billingCycle)
+      priceData.recurring = { interval: recurringConfig.interval, interval_count: recurringConfig.interval_count }
     }
 
     const sessionConfig = {
@@ -433,6 +489,7 @@ ipcMain.handle('stripe-create-link', async (event, payload) => {
       mode: type,
       success_url: 'https://payforge.azokia.com/success?session_id={CHECKOUT_SESSION_ID}',
       cancel_url: 'https://payforge.azokia.com/cancel',
+      expires_at: getCheckoutSessionExpiresAt(),
       metadata: {
         base_usd_amount: (amount / 100).toFixed(2),
         ...(dopAmountText ? { equivalent_dop_amount: dopAmountText } : {})
@@ -447,21 +504,8 @@ ipcMain.handle('stripe-create-link', async (event, payload) => {
     const session = await stripe.checkout.sessions.create(sessionConfig)
     console.log('Sesión creada:', session.id, session.url)
 
-    let finalUrl = session.url
-    try {
-      console.log('Acortando URL con is.gd API...')
-      const shortenerRes = await fetch(`https://is.gd/create.php?format=json&url=${encodeURIComponent(session.url)}`)
-      if (shortenerRes.ok) {
-        const shortData = await shortenerRes.json()
-        if (shortData.shorturl) {
-          finalUrl = shortData.shorturl
-          console.log('URL acortada con éxito por is.gd:', finalUrl)
-        }
-      }
-    } catch (shortenErr) {
-      console.error('Error acortando URL con is.gd:', shortenErr.message)
-      // Fallback al URL largo original de Stripe para resiliencia del flujo
-    }
+    const shortCode = generateShortCode()
+    const finalUrl = getInternalShortUrl(shortCode)
 
     // GUARDAR LINK EN LA BASE DE DATOS
     try {
@@ -473,11 +517,14 @@ ipcMain.handle('stripe-create-link', async (event, payload) => {
           'apikey': ANON_KEY
         },
         body: JSON.stringify([{
-          url: `${finalUrl}||${session.url}`,
+          url: finalUrl,
+          stripe_url: session.url,
+          short_code: shortCode,
           description: finalDescription,
           amount: amount,
           currency: currency.toUpperCase(),
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          expires_at: getCheckoutSessionExpiresAtIso()
         }])
       })
       console.log('Link guardado en Insforge DB');
@@ -495,6 +542,7 @@ ipcMain.handle('stripe-create-link', async (event, payload) => {
 // Obtener historial de links generados
 ipcMain.handle('db-get-links', async () => {
   try {
+    await deleteExpiredPaymentLinks()
     const response = await fetch(`${INSFORGE_URL}/api/database/records/payment_links?select=*&order=created_at.desc`, {
       headers: {
         'Authorization': `Bearer ${ANON_KEY}`,
@@ -634,8 +682,11 @@ ipcMain.handle('stripe-generate-contract-links', async (event, { contractId, amo
         mode: 'payment',
         success_url: 'https://payforge.azokia.com/success',
         cancel_url: 'https://payforge.azokia.com/cancel',
+        expires_at: getCheckoutSessionExpiresAt(),
       });
-      const link = { label: split.label, url: session.url, amount: split.amount, mode: 'payment' };
+      const shortCode = generateShortCode();
+      const shortUrl = getInternalShortUrl(shortCode);
+      const link = { label: split.label, url: shortUrl, amount: split.amount, mode: 'payment' };
       links.push(link);
 
       await fetch(`${INSFORGE_URL}/api/database/records/payment_links`, {
@@ -646,11 +697,14 @@ ipcMain.handle('stripe-generate-contract-links', async (event, { contractId, amo
           'apikey': ANON_KEY
         },
         body: JSON.stringify([{
-          url: session.url,
+          url: shortUrl,
+          stripe_url: session.url,
+          short_code: shortCode,
           description: `${description} - ${split.label}`,
           amount: split.amount,
           currency: 'USD',
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          expires_at: getCheckoutSessionExpiresAtIso()
         }])
       });
     }
@@ -671,9 +725,12 @@ ipcMain.handle('stripe-generate-contract-links', async (event, { contractId, amo
         mode: 'subscription',
         success_url: 'https://payforge.azokia.com/success',
         cancel_url: 'https://payforge.azokia.com/cancel',
+        expires_at: getCheckoutSessionExpiresAt(),
       });
 
-      const link = { label: 'Suscripción mensual', url: session.url, amount: recurringCents, mode: 'subscription' };
+      const shortCode = generateShortCode();
+      const shortUrl = getInternalShortUrl(shortCode);
+      const link = { label: 'Suscripción mensual', url: shortUrl, amount: recurringCents, mode: 'subscription' };
       links.push(link);
 
       await fetch(`${INSFORGE_URL}/api/database/records/payment_links`, {
@@ -684,11 +741,14 @@ ipcMain.handle('stripe-generate-contract-links', async (event, { contractId, amo
           'apikey': ANON_KEY
         },
         body: JSON.stringify([{
-          url: session.url,
+          url: shortUrl,
+          stripe_url: session.url,
+          short_code: shortCode,
           description: `${description} - Suscripción mensual`,
           amount: recurringCents,
           currency: 'USD',
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          expires_at: getCheckoutSessionExpiresAtIso()
         }])
       });
     }
@@ -716,7 +776,11 @@ ipcMain.handle('stripe-generate-single-contract-link', async (event, { amount, d
       mode,
       success_url: 'https://payforge.azokia.com/success',
       cancel_url: 'https://payforge.azokia.com/cancel',
+      expires_at: getCheckoutSessionExpiresAt(),
     })
+
+    const shortCode = generateShortCode()
+    const shortUrl = getInternalShortUrl(shortCode)
 
     await fetch(`${INSFORGE_URL}/api/database/records/payment_links`, {
       method: 'POST',
@@ -726,15 +790,18 @@ ipcMain.handle('stripe-generate-single-contract-link', async (event, { amount, d
         'apikey': ANON_KEY
       },
       body: JSON.stringify([{
-        url: session.url,
+        url: shortUrl,
+        stripe_url: session.url,
+        short_code: shortCode,
         description: `${description} - ${label}`,
         amount: unitAmount,
         currency: 'USD',
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        expires_at: getCheckoutSessionExpiresAtIso()
       }])
     })
 
-    return { data: { label, url: session.url, amount: unitAmount, mode }, error: null }
+    return { data: { label, url: shortUrl, amount: unitAmount, mode }, error: null }
   } catch (error) {
     return { data: null, error: error.message }
   }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Stripe Admin - Login</title>
+    <title>Payforge - Login</title>
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;" />
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -427,12 +427,205 @@
             direction: ltr;
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
+
+
+        /* Payforge Dark Modern Login Theme */
+        :root {
+            --pf-surface: rgba(15, 23, 42, 0.88);
+            --pf-border: rgba(148, 163, 184, 0.20);
+            --pf-border-strong: rgba(148, 163, 184, 0.34);
+            --pf-text: #e5eefb;
+            --pf-muted: #94a3b8;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at 18% 12%, rgba(56, 189, 248, 0.22), transparent 26rem),
+                radial-gradient(circle at 82% 18%, rgba(129, 140, 248, 0.20), transparent 28rem),
+                linear-gradient(135deg, #020617 0%, #07111f 46%, #0f172a 100%) !important;
+            color: var(--pf-text) !important;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image: linear-gradient(rgba(148, 163, 184, 0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(148, 163, 184, 0.045) 1px, transparent 1px);
+            background-size: 44px 44px;
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,.65), transparent 76%);
+        }
+
+        .titlebar { background: rgba(2, 6, 23, 0.92) !important; border-bottom-color: var(--pf-border) !important; }
+        .titlebar-title, .titlebar-btn { color: var(--pf-muted) !important; }
+        .titlebar-btn:hover { background-color: rgba(148, 163, 184, 0.12) !important; color: var(--pf-text) !important; }
+        .brand-title, .card-title, .checkbox-label { color: var(--pf-text) !important; }
+        .brand-subtitle, .card-subtitle, .form-label, .input-icon, .forgot-link, .toggle-password { color: var(--pf-muted) !important; }
+
+        .login-card {
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.78)) !important;
+            border-color: var(--pf-border) !important;
+            border-radius: 24px !important;
+            box-shadow: 0 36px 120px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(255,255,255,0.04) !important;
+            backdrop-filter: blur(22px);
+        }
+
+        input[type="email"], input[type="password"], input[type="text"] {
+            background: rgba(2, 6, 23, 0.64) !important;
+            border-color: var(--pf-border-strong) !important;
+            color: var(--pf-text) !important;
+        }
+
+        input::placeholder { color: rgba(148, 163, 184, 0.68) !important; }
+        input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focus { border-color: rgba(56, 189, 248, 0.72) !important; box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.16) !important; }
+        .submit-btn { background: linear-gradient(135deg, #38bdf8, #818cf8) !important; color: #020617 !important; border-radius: 14px !important; box-shadow: 0 18px 44px rgba(56, 189, 248, 0.22) !important; }
+        .submit-btn:hover { background: linear-gradient(135deg, #7dd3fc, #a5b4fc) !important; }
+        .google-btn { background: rgba(15, 23, 42, 0.72) !important; border-color: var(--pf-border) !important; color: var(--pf-text) !important; border-radius: 14px !important; }
+        .google-btn:hover { background: rgba(30, 41, 59, 0.86) !important; }
+        .divider { border-top-color: var(--pf-border) !important; }
+
+
+
+        /* Login polish from screenshot review */
+        main {
+            justify-content: flex-start !important;
+            padding-top: clamp(42px, 7vh, 84px) !important;
+        }
+
+        .login-card {
+            max-width: 520px !important;
+            padding: 42px 48px !important;
+            border-radius: 28px !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 50% 0%, rgba(56,189,248,0.13), transparent 22rem),
+                linear-gradient(90deg, transparent, rgba(255,255,255,0.035), transparent);
+        }
+
+        .login-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-section {
+            margin-bottom: 28px !important;
+        }
+
+        .brand-icon {
+            width: 64px !important;
+            height: 64px !important;
+            margin-bottom: 16px !important;
+            filter: drop-shadow(0 18px 34px rgba(56,189,248,.16));
+        }
+
+        .brand-title {
+            font-size: 34px !important;
+            line-height: 1.05 !important;
+            font-weight: 800 !important;
+            letter-spacing: -0.04em !important;
+        }
+
+        .card-header {
+            margin-bottom: 28px !important;
+        }
+
+        .card-title {
+            font-size: 24px !important;
+            line-height: 32px !important;
+            letter-spacing: -0.03em !important;
+        }
+
+        .form-label,
+        .forgot-link {
+            letter-spacing: 0.08em !important;
+            color: #8ea0bb !important;
+        }
+
+        input[type="email"], input[type="password"], input[type="text"] {
+            height: 58px !important;
+            border-radius: 12px !important;
+            font-weight: 650 !important;
+            font-size: 15px !important;
+            background: rgba(2, 6, 23, 0.52) !important;
+        }
+
+        .input-icon {
+            color: #9fb0ca !important;
+        }
+
+        input[type="checkbox"] {
+            width: 18px !important;
+            height: 18px !important;
+            appearance: none;
+            background: rgba(2, 6, 23, 0.72) !important;
+            border: 1px solid rgba(148, 163, 184, 0.45) !important;
+            border-radius: 6px !important;
+            display: inline-grid;
+            place-content: center;
+        }
+
+        input[type="checkbox"]::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            transform: scale(0);
+            transition: transform 120ms ease-in-out;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            clip-path: polygon(14% 52%, 0 66%, 38% 100%, 100% 18%, 84% 6%, 34% 70%);
+        }
+
+        input[type="checkbox"]:checked::before {
+            transform: scale(1);
+        }
+
+        .checkbox-group {
+            gap: 10px !important;
+        }
+
+        .checkbox-label {
+            font-size: 14px !important;
+            color: #dbeafe !important;
+        }
+
+        .submit-btn {
+            height: 60px !important;
+            margin-top: 10px !important;
+            color: #06111f !important;
+            font-weight: 800 !important;
+            border-radius: 18px !important;
+            box-shadow: 0 22px 58px rgba(56,189,248,.24), inset 0 1px 0 rgba(255,255,255,.40) !important;
+        }
+
+        #app-version {
+            margin-top: 24px !important;
+            letter-spacing: 0.12em !important;
+            color: #69758a !important;
+        }
+
+        .divider {
+            margin: 28px 0 20px !important;
+        }
+
+        .google-btn {
+            height: 58px !important;
+            border-radius: 18px !important;
+            font-weight: 700 !important;
+        }
+
     </style>
 </head>
 <body>
     <!-- Custom Titlebar -->
     <div class="titlebar">
-        <div class="titlebar-title">Stripe Admin - Login</div>
+        <div class="titlebar-title">Payforge - Login</div>
         <div class="titlebar-controls">
             <button class="titlebar-btn" id="min-btn" title="Minimize">
                 <svg viewBox="0 0 12 12"><rect x="1" y="5" width="10" height="1"/></svg>

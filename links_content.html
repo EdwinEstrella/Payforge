@@ -1,7 +1,7 @@
 <div class="flex items-end justify-between mb-8">
     <div>
-        <h1 class="font-headline-md text-headline-md text-slate-900 mb-1">Links Generados</h1>
-        <p class="font-body-md text-body-md text-slate-500">Historial de todos los enlaces de pago creados desde la aplicación.</p>
+        <h1 class="font-headline-md text-headline-md text-slate-100 mb-1">Links Generados</h1>
+        <p class="font-body-md text-body-md text-slate-400">Historial de todos los enlaces de pago creados desde la aplicación.</p>
     </div>
     <div class="flex gap-3">
         <button onclick="openPaymentModalFromDashboard()" class="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-lg transition-all shadow-sm">
@@ -11,11 +11,11 @@
     </div>
 </div>
 
-<div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+<div class="bg-slate-900/80 border border-slate-700 rounded-xl overflow-hidden shadow-sm">
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
             <thead>
-                <tr class="bg-white border-b border-slate-100">
+                <tr class="bg-slate-900/70 border-b border-slate-800">
                     <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs">Fecha</th>
                     <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs">Concepto</th>
                     <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs">Monto</th>
@@ -23,7 +23,7 @@
                     <th class="px-6 py-4 font-label-caps text-label-caps text-slate-400 uppercase tracking-widest text-xs text-right">Acciones</th>
                 </tr>
             </thead>
-            <tbody id="links-table-body" class="divide-y divide-slate-50">
+            <tbody id="links-table-body" class="divide-y divide-slate-800">
                 <tr>
                     <td colspan="5" class="px-6 py-12 text-center text-slate-400">
                         <div class="flex flex-col items-center gap-2">

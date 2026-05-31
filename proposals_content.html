@@ -2,8 +2,8 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
         <div>
-            <h2 class="text-display-lg text-slate-900">Generador de Propuestas</h2>
-            <p class="text-slate-500 font-medium">Crea y gestiona propuestas detalladas para tus clientes.</p>
+            <h2 class="text-display-lg text-slate-100">Generador de Propuestas</h2>
+            <p class="text-slate-400 font-medium">Crea y gestiona propuestas detalladas para tus clientes.</p>
         </div>
         <button onclick="openProposalModal()" class="px-6 py-3 bg-black text-white rounded-xl font-bold flex items-center gap-2 hover:bg-slate-800 transition-all shadow-lg active:scale-95">
             <span class="material-symbols-outlined">add_circle</span>
@@ -13,35 +13,35 @@
 
     <!-- Stats -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-            <p class="text-label-caps text-slate-500 mb-2">Total Propuestas</p>
-            <h3 id="stat-total-proposals" class="text-3xl font-bold text-slate-900">--</h3>
+        <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-700 shadow-sm">
+            <p class="text-label-caps text-slate-400 mb-2">Total Propuestas</p>
+            <h3 id="stat-total-proposals" class="text-3xl font-bold text-slate-100">--</h3>
         </div>
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-blue-500">
-            <p class="text-label-caps text-slate-500 mb-2">Borradores</p>
+        <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-700 shadow-sm border-l-4 border-l-blue-500">
+            <p class="text-label-caps text-slate-400 mb-2">Borradores</p>
             <h3 id="stat-draft-proposals" class="text-3xl font-bold text-blue-600">--</h3>
         </div>
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-green-500">
-            <p class="text-label-caps text-slate-500 mb-2">Anexadas</p>
+        <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-700 shadow-sm border-l-4 border-l-green-500">
+            <p class="text-label-caps text-slate-400 mb-2">Anexadas</p>
             <h3 id="stat-annexed-proposals" class="text-3xl font-bold text-green-600">--</h3>
         </div>
     </div>
 
     <!-- Proposals Table -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-            <h3 class="font-bold text-slate-800">Historial de Propuestas</h3>
+    <div class="bg-slate-900/80 rounded-2xl border border-slate-700 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-800 bg-slate-900/70/50 flex items-center justify-between">
+            <h3 class="font-bold text-slate-100">Historial de Propuestas</h3>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-50/50">
-                        <th class="px-6 py-4 text-label-caps text-slate-500 border-b border-slate-100">Proyecto / Cliente</th>
-                        <th class="px-6 py-4 text-label-caps text-slate-500 border-b border-slate-100">Tecnologías</th>
-                        <th class="px-6 py-4 text-label-caps text-slate-500 border-b border-slate-100">Precio</th>
-                        <th class="px-6 py-4 text-label-caps text-slate-500 border-b border-slate-100">Estado</th>
-                        <th class="px-6 py-4 text-label-caps text-slate-500 border-b border-slate-100">Vencimiento</th>
-                        <th class="px-6 py-4 text-label-caps text-slate-500 border-b border-slate-100 text-right">Acciones</th>
+                    <tr class="bg-slate-900/70/50">
+                        <th class="px-6 py-4 text-label-caps text-slate-400 border-b border-slate-800">Proyecto / Cliente</th>
+                        <th class="px-6 py-4 text-label-caps text-slate-400 border-b border-slate-800">Tecnologías</th>
+                        <th class="px-6 py-4 text-label-caps text-slate-400 border-b border-slate-800">Precio</th>
+                        <th class="px-6 py-4 text-label-caps text-slate-400 border-b border-slate-800">Estado</th>
+                        <th class="px-6 py-4 text-label-caps text-slate-400 border-b border-slate-800">Vencimiento</th>
+                        <th class="px-6 py-4 text-label-caps text-slate-400 border-b border-slate-800 text-right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="proposals-table-body">
@@ -56,10 +56,10 @@
 
 <!-- Modal: Nueva Propuesta -->
 <div id="proposal-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center hidden">
-    <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-        <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-            <h3 class="text-headline-sm text-slate-900">Generar Propuesta Técnica</h3>
-            <button onclick="closeProposalModal()" class="text-slate-400 hover:text-slate-600">
+    <div class="bg-slate-900/80 w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        <div class="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/70">
+            <h3 class="text-headline-sm text-slate-100">Generar Propuesta Técnica</h3>
+            <button onclick="closeProposalModal()" class="text-slate-400 hover:text-slate-300">
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
@@ -68,29 +68,29 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
-                        <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Cliente</label>
-                        <button type="button" onclick="toggleProposalNewClient()" id="toggle-proposal-client-btn" class="text-[10px] bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-bold hover:bg-slate-200">Manual</button>
+                        <label class="text-xs font-bold text-slate-200 uppercase tracking-wider">Cliente</label>
+                        <button type="button" onclick="toggleProposalNewClient()" id="toggle-proposal-client-btn" class="text-[10px] bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700 font-bold hover:bg-slate-200">Manual</button>
                     </div>
                     <div id="proposal-client-select-container">
-                        <select id="proposal-client" class="w-full rounded-xl border-slate-200 text-sm focus:ring-black focus:border-black">
+                        <select id="proposal-client" class="w-full rounded-xl border-slate-700 text-sm focus:ring-black focus:border-black">
                             <option value="">Selecciona un cliente...</option>
                         </select>
                     </div>
                     <div id="proposal-client-manual-container" class="hidden space-y-2">
-                        <input type="text" id="proposal-manual-client-name" placeholder="Nombre completo" class="w-full rounded-lg border-slate-200 text-sm">
-                        <input type="email" id="proposal-manual-client-email" placeholder="Email" class="w-full rounded-lg border-slate-200 text-sm">
+                        <input type="text" id="proposal-manual-client-name" placeholder="Nombre completo" class="w-full rounded-lg border-slate-700 text-sm">
+                        <input type="email" id="proposal-manual-client-email" placeholder="Email" class="w-full rounded-lg border-slate-700 text-sm">
                     </div>
                 </div>
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Nombre del Proyecto</label>
-                    <input type="text" id="proposal-project-name" placeholder="Ej: Ecommerce Moderno" class="w-full rounded-xl border-slate-200 text-sm focus:ring-black focus:border-black" required>
+                    <label class="text-xs font-bold text-slate-200 uppercase tracking-wider">Nombre del Proyecto</label>
+                    <input type="text" id="proposal-project-name" placeholder="Ej: Ecommerce Moderno" class="w-full rounded-xl border-slate-700 text-sm focus:ring-black focus:border-black" required>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Tipo de Proyecto</label>
-                    <select id="proposal-type" class="w-full rounded-xl border-slate-200 text-sm">
+                    <label class="text-xs font-bold text-slate-200 uppercase tracking-wider">Tipo de Proyecto</label>
+                    <select id="proposal-type" class="w-full rounded-xl border-slate-700 text-sm">
                         <option value="Web">Web</option>
                         <option value="Mobile">Mobile</option>
                         <option value="Desktop">Desktop</option>
@@ -101,86 +101,86 @@
 
             <div class="space-y-4">
                 <div class="flex items-center justify-between gap-4">
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Stack tecnico</label>
+                    <label class="text-xs font-bold text-slate-200 uppercase tracking-wider">Stack tecnico</label>
                     <span class="text-[10px] text-slate-400 font-medium">Selecciona uno o varios</span>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div class="space-y-2">
-                        <label class="text-[10px] text-slate-500 uppercase">Lenguaje</label>
+                        <label class="text-[10px] text-slate-400 uppercase">Lenguaje</label>
                         <div id="proposal-language-options" class="grid grid-cols-2 gap-2"><!-- Se llena con JS --></div>
                     </div>
                     <div class="space-y-2">
-                        <label class="text-[10px] text-slate-500 uppercase">Backend / Datos</label>
+                        <label class="text-[10px] text-slate-400 uppercase">Backend / Datos</label>
                         <div id="proposal-backend-options" class="grid grid-cols-2 gap-2"><!-- Se llena con JS --></div>
                     </div>
                     <div class="space-y-2">
-                        <label class="text-[10px] text-slate-500 uppercase">Frameworks</label>
+                        <label class="text-[10px] text-slate-400 uppercase">Frameworks</label>
                         <div id="proposal-framework-options" class="grid grid-cols-2 gap-2"><!-- Se llena con JS --></div>
                     </div>
                     <div class="space-y-2">
-                        <label class="text-[10px] text-slate-500 uppercase">Skills / Integraciones</label>
+                        <label class="text-[10px] text-slate-400 uppercase">Skills / Integraciones</label>
                         <div id="proposal-skill-options" class="grid grid-cols-2 gap-2"><!-- Se llena con JS --></div>
                     </div>
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-[10px] text-slate-500 uppercase">Extras separados por coma</label>
-                    <input type="text" id="proposal-extra-stack" placeholder="Ej: Laravel, MySQL, Docker" class="w-full rounded-xl border-slate-200 text-sm">
+                    <label class="text-[10px] text-slate-400 uppercase">Extras separados por coma</label>
+                    <input type="text" id="proposal-extra-stack" placeholder="Ej: Laravel, MySQL, Docker" class="w-full rounded-xl border-slate-700 text-sm">
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-900/70 p-6 rounded-2xl border border-slate-800">
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Precio del Proyecto (USD)</label>
-                    <input type="number" id="proposal-amount" placeholder="100.00" class="w-full rounded-xl border-slate-200 text-sm font-bold text-slate-900">
+                    <label class="text-xs font-bold text-slate-200 uppercase tracking-wider">Precio del Proyecto (USD)</label>
+                    <input type="number" id="proposal-amount" placeholder="100.00" class="w-full rounded-xl border-slate-700 text-sm font-bold text-slate-100">
                 </div>
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Esquema de Pago</label>
-                    <select id="proposal-payment-scheme" class="w-full rounded-xl border-slate-200 text-sm">
+                    <label class="text-xs font-bold text-slate-200 uppercase tracking-wider">Esquema de Pago</label>
+                    <select id="proposal-payment-scheme" class="w-full rounded-xl border-slate-700 text-sm">
                         <option value="50-50">50% Anticipo / 50% Entrega</option>
                         <option value="3-parts">30% Inicio / 40% Hito / 30% Final</option>
                         <option value="100-upfront">100% Por Adelantado</option>
                     </select>
                 </div>
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Suscripcion Mensual (USD)</label>
-                    <input type="number" id="proposal-recurring-amount" placeholder="0.00" class="w-full rounded-xl border-slate-200 text-sm">
+                    <label class="text-xs font-bold text-slate-200 uppercase tracking-wider">Suscripcion Mensual (USD)</label>
+                    <input type="number" id="proposal-recurring-amount" placeholder="0.00" class="w-full rounded-xl border-slate-700 text-sm">
                 </div>
             </div>
 
             <div class="space-y-2">
-                <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Propuesta Generada</label>
-                <textarea id="proposal-generated-text" class="w-full min-h-[180px] rounded-xl border-slate-200 bg-slate-50 text-sm text-slate-700" readonly placeholder="Se generara automaticamente con los datos seleccionados."></textarea>
+                <label class="text-xs font-bold text-slate-200 uppercase tracking-wider">Propuesta Generada</label>
+                <textarea id="proposal-generated-text" class="w-full min-h-[180px] rounded-xl border-slate-700 bg-slate-900/70 text-sm text-slate-200" readonly placeholder="Se generara automaticamente con los datos seleccionados."></textarea>
             </div>
 
-            <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-6">
-                <h4 class="text-sm font-bold text-slate-900">Ajustes Visuales</h4>
+            <div class="p-6 bg-slate-900/70 rounded-2xl border border-slate-800 space-y-6">
+                <h4 class="text-sm font-bold text-slate-100">Ajustes Visuales</h4>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="space-y-2">
-                        <label class="text-xs font-bold text-slate-700 uppercase">Color Primario</label>
+                        <label class="text-xs font-bold text-slate-200 uppercase">Color Primario</label>
                         <div class="flex gap-2">
-                            <input type="color" id="proposal-color-primary" value="#000000" class="h-10 w-10 p-1 rounded-lg border-slate-200">
-                            <input type="text" id="proposal-color-primary-hex" value="#000000" class="flex-1 rounded-xl border-slate-200 text-xs font-mono">
+                            <input type="color" id="proposal-color-primary" value="#000000" class="h-10 w-10 p-1 rounded-lg border-slate-700">
+                            <input type="text" id="proposal-color-primary-hex" value="#000000" class="flex-1 rounded-xl border-slate-700 text-xs font-mono">
                         </div>
                     </div>
                     <div class="space-y-2">
-                        <label class="text-xs font-bold text-slate-700 uppercase">Color Acento</label>
+                        <label class="text-xs font-bold text-slate-200 uppercase">Color Acento</label>
                         <div class="flex gap-2">
-                            <input type="color" id="proposal-color-accent" value="#2563EB" class="h-10 w-10 p-1 rounded-lg border-slate-200">
-                            <input type="text" id="proposal-color-accent-hex" value="#2563EB" class="flex-1 rounded-xl border-slate-200 text-xs font-mono">
+                            <input type="color" id="proposal-color-accent" value="#2563EB" class="h-10 w-10 p-1 rounded-lg border-slate-700">
+                            <input type="text" id="proposal-color-accent-hex" value="#2563EB" class="flex-1 rounded-xl border-slate-700 text-xs font-mono">
                         </div>
                     </div>
                     <div class="flex items-center gap-3 pt-6">
                         <input type="checkbox" id="proposal-logo" class="w-5 h-5 rounded border-slate-300 text-black focus:ring-black">
-                        <label for="proposal-logo" class="text-sm font-bold text-slate-700">¿Incluye Logo?</label>
+                        <label for="proposal-logo" class="text-sm font-bold text-slate-200">¿Incluye Logo?</label>
                     </div>
                 </div>
             </div>
         </form>
 
-        <div class="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
-            <button type="button" onclick="closeProposalModal()" class="px-6 py-2.5 text-slate-600 font-bold hover:bg-slate-200 rounded-xl transition-all">Cancelar</button>
+        <div class="p-6 border-t border-slate-800 flex justify-end gap-3 bg-slate-900/70">
+            <button type="button" onclick="closeProposalModal()" class="px-6 py-2.5 text-slate-300 font-bold hover:bg-slate-200 rounded-xl transition-all">Cancelar</button>
             <button type="submit" form="proposal-form" id="save-proposal-btn" class="px-8 py-2.5 bg-black text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-md active:scale-95">Guardar Propuesta</button>
         </div>
     </div>
