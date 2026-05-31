@@ -330,71 +330,63 @@ async function upsertInsforgeRecord (table, key, value, payload) {
 
 function toIso (timestamp) {
   return timestamp ? new Date(timestamp * 1000).toISOString() : null
-}
-
-// Obtener tasa de cambio y conversión de USD a DOP usando Stripe FX Quotes (con fallback tolerante a fallos)
+}// Obtener tasa de cambio y conversión de USD a DOP usando Stripe FX Quotes (con fallo estricto)
 ipcMain.handle('stripe-get-fx-rate', async (event, { amountUsdCent }) => {
   try {
     const baseAmount = amountUsdCent || 100 // Por defecto $1.00 USD
-    let rate = 58.50 // Tasa de fallback por defecto para RD (muy cercana a la tasa real)
-    let isLiveQuote = false
-    let quoteId = null
+    const authHeader = 'Basic ' + Buffer.from(process.env.STRIPE_SECRET_KEY + ':').toString('base64')
+    
+    const params = new URLSearchParams()
+    params.append('to_currency', 'usd')
+    params.append('from_currencies[]', 'dop')
+    params.append('lock_duration', 'hour')
 
-    try {
-      // Realizar consulta directa mediante Fetch para evitar limitaciones de versiones antiguas del SDK de Stripe que no tienen registrado el recurso 'fxQuotes' (en preview)
-      const authHeader = 'Basic ' + Buffer.from(process.env.STRIPE_SECRET_KEY + ':').toString('base64')
-      
-      const params = new URLSearchParams()
-      params.append('to_currency', 'usd')
-      params.append('from_currencies[]', 'dop')
-      params.append('lock_duration', 'hour')
+    const response = await fetch('https://api.stripe.com/v1/fx_quotes', {
+      method: 'POST',
+      headers: {
+        'Authorization': authHeader,
+        'Stripe-Version': '2025-03-31.preview',
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: params
+    })
 
-      const response = await fetch('https://api.stripe.com/v1/fx_quotes', {
-        method: 'POST',
-        headers: {
-          'Authorization': authHeader,
-          'Stripe-Version': '2025-03-31.preview',
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: params
-      })
-
-      if (response.ok) {
-        const fxQuote = await response.json()
-        console.log('[Stripe FX API Detail] Respuesta completa de Stripe FX:', JSON.stringify(fxQuote, null, 2))
-        const dopRate = fxQuote?.rates?.dop || fxQuote?.rates?.DOP
-        if (dopRate && dopRate.exchange_rate) {
-          // Stripe devuelve la tasa DOP -> USD (por ejemplo, 0.017094)
-          // La tasa inversa USD -> DOP es 1 / tasa_stripe (por ejemplo, 58.50)
-          rate = 1 / dopRate.exchange_rate
-          isLiveQuote = true
-          quoteId = fxQuote.id
-          console.log(`[Stripe FX] Cotización oficial en vivo obtenida vía HTTP. Tasa USD->DOP: ${rate}. ID: ${quoteId}`)
-        }
-      } else {
-        const errData = await response.json().catch(() => ({}))
-        console.log(`[Stripe FX API Error] Stripe respondió con código ${response.status}:`, errData?.error?.message || response.statusText)
-      }
-    } catch (stripeErr) {
-      console.log(`[Stripe FX Fallback] Falló llamada directa a FX Quotes API. Usando simulación de tasa. Detalle: ${stripeErr.message}`)
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}))
+      const errMsg = errData?.error?.message || `Error del servidor Stripe (${response.status})`
+      console.error('[Stripe FX API Error] Falló consulta:', errMsg)
+      return { data: null, error: errMsg }
     }
 
+    const fxQuote = await response.json()
+    console.log('[Stripe FX API Detail] Respuesta completa de Stripe FX:', JSON.stringify(fxQuote, null, 2))
+    
+    const dopRate = fxQuote?.rates?.dop || fxQuote?.rates?.DOP
+    if (!dopRate || !dopRate.exchange_rate) {
+      return { data: null, error: 'La respuesta de Stripe no incluye la tasa para DOP.' }
+    }
+
+    // Stripe devuelve la tasa DOP -> USD (por ejemplo, 0.016522)
+    // La tasa inversa USD -> DOP es 1 / tasa_stripe (por ejemplo, 60.52)
+    const rate = 1 / dopRate.exchange_rate
     const calculatedDopCent = Math.round(baseAmount * rate)
+
+    console.log(`[Stripe FX] Cotización oficial en vivo obtenida vía HTTP. Tasa USD->DOP: ${rate}. ID: ${fxQuote.id}`)
 
     return {
       data: {
         rate,
         usdCent: baseAmount,
         dopCent: calculatedDopCent,
-        isLiveQuote,
-        quoteId,
+        isLiveQuote: true,
+        quoteId: fxQuote.id,
         rateFormatted: rate.toFixed(4)
       },
       error: null
     }
   } catch (err) {
     console.error('Error general en stripe-get-fx-rate:', err.message)
-    return { data: null, error: err.message }
+    return { data: null, error: `Error de red o conexión: ${err.message}` }
   }
 })
 
